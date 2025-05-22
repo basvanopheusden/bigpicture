@@ -2,20 +2,19 @@ import os
 import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import sqlite3
-from datetime import datetime
-import pytz
+
+from .database import (
+    get_db,
+    init_db,
+    log_action_for_undo,
+    get_pacific_time,
+)
+from .utils import parse_json
 
 app = Flask(__name__)
 
-# Determine where the SQLite database should live.  In production the
-# Docker image writes to ``/data/tasks.db`` but for local development we
-# fall back to ``tasks.db`` in the repository root.  The path can be
-# overridden via the ``DATABASE_URL`` environment variable.
-DB_PATH = os.environ.get('DATABASE_URL', 'tasks.db')
-
 app.config['CORS_HEADERS'] = 'Content-Type'
-CORS(app, 
+CORS(app,
      resources={r"/api/*": {
          "origins": [
              "http://localhost:5173",
@@ -27,104 +26,10 @@ CORS(app,
          "supports_credentials": True,
          "expose_headers": ["Access-Control-Allow-Origin"]
      }},
-     supports_credentials=True)
-
-def get_pacific_time():
-    pacific = pytz.timezone('America/Los_Angeles')
-    return datetime.now(pacific).isoformat()
-
-def init_db():
-    print("Initializing database at %s..." % DB_PATH)
-    try:
-        # Ensure the parent directory exists when using a path like /data/tasks.db
-        dir_name = os.path.dirname(DB_PATH)
-        if dir_name:
-            os.makedirs(dir_name, exist_ok=True)
-        with sqlite3.connect(DB_PATH) as conn:
-            c = conn.cursor()
-        
-            # Create areas table if it doesn't exist
-            c.execute('''
-                CREATE TABLE IF NOT EXISTS areas (
-                    key TEXT PRIMARY KEY,
-                    text TEXT NOT NULL,
-                    date_time_created TEXT NOT NULL,
-                    order_index INTEGER NOT NULL DEFAULT 0
-                )
-            ''')
-            
-            # Create objectives table if it doesn't exist
-            c.execute('''
-                CREATE TABLE IF NOT EXISTS objectives (
-                    key TEXT PRIMARY KEY,
-                    area_key TEXT NOT NULL,
-                    text TEXT NOT NULL,
-                    date_time_created TEXT NOT NULL,
-                    date_time_completed TEXT,
-                    status TEXT DEFAULT 'open' CHECK(status IN ('open', 'complete', 'secondary')),
-                    order_index INTEGER NOT NULL DEFAULT 0,
-                    FOREIGN KEY (area_key) REFERENCES areas (key) ON DELETE CASCADE
-                )
-            ''')
-            
-            # Create tasks table if it doesn't exist
-            c.execute('''
-                CREATE TABLE IF NOT EXISTS tasks (
-                    key TEXT PRIMARY KEY,
-                    area_key TEXT,
-                    objective_key TEXT,
-                    text TEXT NOT NULL,
-                    date_time_created TEXT NOT NULL,
-                    date_time_completed TEXT,
-                    status TEXT DEFAULT 'open' CHECK(status IN ('open', 'complete', 'secondary')),
-                    order_index INTEGER NOT NULL DEFAULT 0,
-                    FOREIGN KEY (area_key) REFERENCES areas (key) ON DELETE CASCADE,
-                    FOREIGN KEY (objective_key) REFERENCES objectives (key) ON DELETE CASCADE,
-                    CHECK ((area_key IS NOT NULL AND objective_key IS NULL) OR 
-                        (area_key IS NULL AND objective_key IS NOT NULL))
-                )
-            ''')
-
-            # Create undo_log table if it doesn't exist
-            c.execute('''
-                CREATE TABLE IF NOT EXISTS undo_log (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    action_type TEXT NOT NULL,
-                    table_name TEXT NOT NULL,
-                    record_key TEXT NOT NULL,
-                    old_data TEXT NOT NULL,
-                    timestamp TEXT NOT NULL
-                )
-            ''')
-            
-            print("Database initialized successfully")
-    except sqlite3.Error as e:
-        print(f"Error initializing database: {e}")
-        raise
+    supports_credentials=True)
 
 with app.app_context():
     init_db()
-
-def get_db():
-    try:
-        print(f"Attempting to connect to DB at: {DB_PATH}")
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        return conn
-    except Exception as e:
-        print(f"Database connection error: {str(e)}")
-        import traceback
-        print(traceback.format_exc())
-        raise
-
-
-def log_action_for_undo(conn, action_type, table_name, record_key, old_data):
-    json_data = json.dumps(old_data)
-    conn.execute(
-        'INSERT INTO undo_log (action_type, table_name, record_key, old_data, timestamp) VALUES (?, ?, ?, ?, ?)',
-        (action_type, table_name, record_key, json_data, get_pacific_time())
-    )
-    conn.commit()
 
 
 @app.after_request
@@ -158,14 +63,9 @@ def handle_areas():
     
     if request.method == 'POST':
         try:
-            if not request.is_json:
-                return jsonify({"error": "Content-Type must be application/json"}), 400
-            
-            data = request.json
-            required_fields = ['key', 'text']
-            missing_fields = [field for field in required_fields if field not in data]
-            if missing_fields:
-                return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
+            data, error = parse_json(['key', 'text'])
+            if error:
+                return error
             
             with get_db() as conn:
                 # Get max order_index
@@ -271,14 +171,9 @@ def handle_objectives():
     
     if request.method == 'POST':
         try:
-            if not request.is_json:
-                return jsonify({"error": "Content-Type must be application/json"}), 400
-            
-            data = request.json
-            required_fields = ['key', 'area_key', 'text']
-            missing_fields = [field for field in required_fields if field not in data]
-            if missing_fields:
-                return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
+            data, error = parse_json(['key', 'area_key', 'text'])
+            if error:
+                return error
             
             with get_db() as conn:
                 # Get max order_index for this area
@@ -434,14 +329,9 @@ def handle_tasks():
     
     if request.method == 'POST':
         try:
-            if not request.is_json:
-                return jsonify({"error": "Content-Type must be application/json"}), 400
-            
-            data = request.json
-            required_fields = ['key', 'text']
-            missing_fields = [field for field in required_fields if field not in data]
-            if missing_fields:
-                return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
+            data, error = parse_json(['key', 'text'])
+            if error:
+                return error
             
             with get_db() as conn:
                 # Validate parent references
