@@ -36,3 +36,17 @@ export function isValidDivString(html) {
   const close = (html.match(/<\/div>/g) || []).length;
   return open === close;
 }
+
+/** Build a nested chain of div specs */
+export function nestedDivSpec(depth) {
+  if (depth <= 0) return null;
+  return divSpec({ children: [nestedDivSpec(depth - 1)] });
+}
+
+/** Build a branching tree of div specs */
+export function branchingDivSpec(depth, breadth) {
+  if (depth <= 0) return null;
+  return divSpec({
+    children: Array.from({ length: breadth }, () => branchingDivSpec(depth - 1, breadth))
+  });
+}

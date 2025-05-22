@@ -882,6 +882,7 @@ return (
       </div>
     </DragDropContext>
   </div>
+  </div>
 );
 };
 
