@@ -154,5 +154,34 @@ class APITestCase(unittest.TestCase):
         obj_tasks = sorted([t for t in tasks if t['objective_key'] == 'obj1'], key=lambda x: x['order_index'])
         self.assertEqual([t['key'] for t in obj_tasks], ['task2', 'task1'])
 
+    def test_create_task_in_completed_objective(self):
+        self.client.post('/api/areas', json={"key": "area1", "text": "Area 1"})
+        self.client.post('/api/objectives', json={"key": "obj1", "area_key": "area1", "text": "Obj"})
+        # mark objective complete
+        self.client.patch('/api/objectives/obj1', json={"status": "complete"})
+
+        resp = self.client.post('/api/tasks', json={"key": "t1", "text": "Task", "objective_key": "obj1"})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.get_json()
+        self.assertEqual(data['status'], 'complete')
+        self.assertEqual(data['date_time_completed'], "2021-01-01T00:00:00")
+
+    def test_create_task_missing_parent(self):
+        self.client.post('/api/areas', json={"key": "area1", "text": "Area 1"})
+        resp = self.client.post('/api/tasks', json={"key": "t1", "text": "Task"})
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('Exactly one of area_key or objective_key', resp.get_json()['error'])
+
+    def test_create_task_with_both_parents(self):
+        self.client.post('/api/areas', json={"key": "area1", "text": "Area 1"})
+        self.client.post('/api/objectives', json={"key": "obj1", "area_key": "area1", "text": "Obj"})
+        resp = self.client.post('/api/tasks', json={"key": "t1", "text": "Task", "area_key": "area1", "objective_key": "obj1"})
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('Exactly one of area_key or objective_key', resp.get_json()['error'])
+
+    def test_undo_without_actions(self):
+        resp = self.client.post('/api/undo')
+        self.assertEqual(resp.status_code, 404)
+
 if __name__ == '__main__':
     unittest.main()
