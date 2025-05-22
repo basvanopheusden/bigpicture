@@ -1,1 +1,1 @@
-to run tests, use pytest -q 
+to run tests, use pytest -q and npm test
