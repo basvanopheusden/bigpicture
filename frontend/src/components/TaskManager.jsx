@@ -654,9 +654,8 @@ return (
                       </div>
 
                         {!collapsedAreas.has(area.key) && (
-                          <>
-                            {/* Objectives section */}
-                            <Droppable droppableId={area.key} type="objective">
+                          // Objectives section
+                          <Droppable droppableId={area.key} type="objective">
                               {(provided) => (
                                 <div
                                   {...provided.droppableProps}
@@ -726,10 +725,9 @@ return (
                                 onClick={() => handleAddObjective(area.key)}
                               />
                             </div>
-                          </div>
-                        )}
-                      </Droppable>
-                      </>
+                            </div>
+                          )}
+                        </Droppable>
                     </div>
                   )}
                 </Draggable>
