@@ -24,3 +24,15 @@ test('package.json defines expected npm scripts', () => {
   assert.ok(pkg.scripts && pkg.scripts.build, 'build script missing');
   assert.ok(pkg.scripts && pkg.scripts.preview, 'preview script missing');
 });
+
+import tailwindConfig from '../tailwind.config.js';
+
+test('tailwind config includes index.html', () => {
+  assert.ok(tailwindConfig.content.includes('./index.html'));
+});
+
+test('main.jsx renders App inside StrictMode', () => {
+  const src = readFileSync(resolve('src/main.jsx'), 'utf8');
+  assert.match(src, /<StrictMode>/);
+  assert.match(src, /<App \/>/);
+});
