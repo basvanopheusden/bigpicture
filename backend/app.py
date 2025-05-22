@@ -3,13 +3,27 @@ import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from .database import (
-    get_db,
-    init_db,
-    log_action_for_undo,
-    get_pacific_time,
-)
-from .utils import parse_json
+try:
+    # When imported as part of the ``backend`` package (e.g. during tests)
+    # the relative imports below work as expected.  However, running the file
+    # directly via ``python backend/app.py`` does not assign a package name,
+    # causing relative imports to fail.  To support both use cases we try the
+    # relative imports first and fall back to absolute imports when necessary.
+    from .database import (
+        get_db,
+        init_db,
+        log_action_for_undo,
+        get_pacific_time,
+    )
+    from .utils import parse_json
+except ImportError:  # pragma: no cover - executed only when run as script
+    from database import (
+        get_db,
+        init_db,
+        log_action_for_undo,
+        get_pacific_time,
+    )
+    from utils import parse_json
 
 app = Flask(__name__)
 
