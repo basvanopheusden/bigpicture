@@ -760,8 +760,9 @@ return (
 
       {/* Bottom section */}
       <div className="flex-1 p-4 sm:p-8 mx-2 sm:mx-32 max-w-[1200px] sm:max-w-none">
-        {areas.map((area) => (
-          <div key={`bottom-${area.key}`} className="space-y-4">
+        {areas.map((area) => {
+          return (
+            <div key={`bottom-${area.key}`} className="space-y-4">
             {/* Area header */}
             <div className="font-extrabold mb-2 flex items-center">
               <button
@@ -869,9 +870,8 @@ return (
                 </Droppable>
               </div>
             )}
-          )}
-        </div>
-      ))}
+          );
+        })}
       </div>
     </DragDropContext>
   </div>
