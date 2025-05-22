@@ -10,6 +10,12 @@ function resolve(relPath) {
   return path.join(__dirname, '..', relPath);
 }
 
+function checkBalanced(src, tag) {
+  const open = (src.match(new RegExp(`<${tag}\\b`, 'g')) || []).length;
+  const close = (src.match(new RegExp(`</${tag}>`, 'g')) || []).length;
+  assert.equal(open, close);
+}
+
 test('TaskManager JSX fragments are balanced', () => {
   const src = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
   const opens = (src.match(/<>/g) || []).length;
@@ -26,7 +32,20 @@ test('TaskManager div tags are balanced', () => {
 
 test('DragDropContext tag closes properly', () => {
   const src = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
-  const opens = (src.match(/<DragDropContext/g) || []).length;
-  const closes = (src.match(/<\/DragDropContext>/g) || []).length;
-  assert.equal(opens, closes);
+  checkBalanced(src, 'DragDropContext');
+});
+
+test('Droppable tags close properly', () => {
+  const src = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
+  checkBalanced(src, 'Droppable');
+});
+
+test('Draggable tags close properly', () => {
+  const src = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
+  checkBalanced(src, 'Draggable');
+});
+
+test('ReactMarkdown tags close properly', () => {
+  const src = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
+  checkBalanced(src, 'ReactMarkdown');
 });
