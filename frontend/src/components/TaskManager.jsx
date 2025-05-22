@@ -5,6 +5,7 @@ import TaskItem from './TaskItem';
 import { v4 as uuidv4 } from 'uuid';
 import apiWrapper from '../api';
 import ReactMarkdown from 'react-markdown';
+import { getStoredAuth, storeAuth, clearAuth } from '../utils/auth';
 const TaskManager = () => {
     const [authenticated, setAuthenticated] = useState(false);
     const [passcode, setPasscode] = useState('');
@@ -23,6 +24,12 @@ const TaskManager = () => {
     });
     const editInputRef = useRef(null);
     const editInputBottomRef = useRef(null);
+
+    useEffect(() => {
+      if (getStoredAuth()) {
+        setAuthenticated(true);
+      }
+    }, []);
   
     useEffect(() => {
       if (authenticated) {
@@ -107,10 +114,16 @@ const TaskManager = () => {
       if (event.key === 'Enter') {
         if (passcode === 'sneeze') {
           setAuthenticated(true);
+          storeAuth();
         } else {
           setPasscode('');
         }
       }
+    };
+
+    const handleLogout = () => {
+      clearAuth();
+      setAuthenticated(false);
     };
 // Area handlers
 const handleAreaClick = (area, event, isBottom = false) => {
