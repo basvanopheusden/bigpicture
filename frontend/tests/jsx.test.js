@@ -16,3 +16,17 @@ test('TaskManager JSX fragments are balanced', () => {
   const closes = (src.match(/<\/>/g) || []).length;
   assert.equal(opens, closes);
 });
+
+test('TaskManager div tags are balanced', () => {
+  const src = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
+  const opens = (src.match(/<div[^>]*>/g) || []).length;
+  const closes = (src.match(/<\/div>/g) || []).length;
+  assert.equal(opens, closes);
+});
+
+test('DragDropContext tag closes properly', () => {
+  const src = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
+  const opens = (src.match(/<DragDropContext/g) || []).length;
+  const closes = (src.match(/<\/DragDropContext>/g) || []).length;
+  assert.equal(opens, closes);
+});
