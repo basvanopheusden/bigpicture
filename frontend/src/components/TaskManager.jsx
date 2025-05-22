@@ -760,118 +760,155 @@ return (
 
       {/* Bottom section */}
       <div className="flex-1 p-4 sm:p-8 mx-2 sm:mx-32 max-w-[1200px] sm:max-w-none">
-        {areas.map((area) => (
-          <div key={`bottom-${area.key}`} className="space-y-4">
-            {/* Area header */}
-            <div className="font-extrabold mb-2 flex items-center">
-              <button
-                onClick={() => toggleAreaCollapse(area.key)}
-                className="mr-2"
-              >
-                {collapsedAreas.has(area.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
-              </button>
-              {area.text}
-            </div>
-
-            {/* Objectives and their tasks */}
-            {!collapsedAreas.has(area.key) && (
-              <div className="pl-4 space-y-1">
-                {objectives
-                  .filter(obj => obj.area_key === area.key)
-                  .sort((a, b) => a.order_index - b.order_index)
-                  .map((objective, index) => (
-                    <div key={`bottom-${objective.key}`} className="group">
-                      {/* Objective */}
-                    <div className="flex items-center italic">
-                      <span className={objective.status === 'complete' ? 'line-through' : ''}>
-                        {index + 1}. {objective.text}
-                      </span>
-                    </div>
-
-                    {/* Tasks under Objective */}
-                    <Droppable droppableId={`${objective.key}-objective`} type="task">
-                      {(provided) => (
-                        <div 
-                          {...provided.droppableProps} 
-                          ref={provided.innerRef}
-                          className="pl-4 space-y-1 mt-1 mb-4"
-                        >
-                          {tasks
-                            .filter(task => task.objective_key === objective.key)
-                            .sort((a, b) => a.order_index - b.order_index)
-                            .map((task, index) => (
-                              <TaskItem
-                                key={`task-${task.key}`}
-                                task={task}
-                                index={index}
-                                editing={editingTask?.key === task.key}
-                                editingTask={editingTask}
-                                onEdit={handleTaskClick}
-                                onComplete={handleCompleteTask}
-                                onDelete={handleDeleteTask}
-                                onSecondary={handleSecondaryTask}
-                                inputRef={editInputBottomRef}
-                                onChange={handleTaskChange}
-                                onBlur={handleTaskBlur}
-                                onKeyDown={handleTaskKeyPress}
-                              />
-                            ))}
-                          {provided.placeholder}
-                          <div className="group flex items-center">
-                            <PlusIcon
-                              className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-                              onClick={() => handleAddTask(objective.key, 'objective')}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </Droppable>
-                    </div>
-                  ))}
-
-                {/* Tasks directly under Area */}
-                <Droppable droppableId={`${area.key}-area`} type="task">
-                  {(provided) => (
+        <Droppable droppableId="areas-list-bottom" type="area">
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className="space-y-4"
+            >
+              {areas.map((area, index) => (
+                <Draggable key={`bottom-${area.key}`} draggableId={area.key} index={index}>
+                  {(provided, snapshot) => (
                     <div
-                      {...provided.droppableProps}
                       ref={provided.innerRef}
-                      className="space-y-1 mt-4"
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`${snapshot.isDragging ? 'opacity-50' : ''}`}
                     >
-                      {tasks
-                        .filter(task => task.area_key === area.key)
-                        .sort((a, b) => a.order_index - b.order_index)
-                        .map((task, index) => (
-                          <TaskItem
-                            key={`task-${task.key}`}
-                            task={task}
-                            index={index}
-                            editing={editingTask?.key === task.key}
-                            editingTask={editingTask}
-                            onEdit={handleTaskClick}
-                            onComplete={handleCompleteTask}
-                            onDelete={handleDeleteTask}
-                            onSecondary={handleSecondaryTask}
-                            inputRef={editInputBottomRef}
-                            onChange={handleTaskChange}
-                            onBlur={handleTaskBlur}
-                            onKeyDown={handleTaskKeyPress}
-                          />
-                        ))}
-                      {provided.placeholder}
-                      <div className="group flex items-center">
-                        <PlusIcon
-                          className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-                          onClick={() => handleAddTask(area.key, 'area')}
-                        />
+                      {/* Area header */}
+                      <div className="font-extrabold mb-2 flex items-center">
+                        <button
+                          onClick={() => toggleAreaCollapse(area.key)}
+                          className="mr-2"
+                        >
+                          {collapsedAreas.has(area.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
+                        </button>
+                        {area.text}
                       </div>
+
+                      {/* Objectives and their tasks */}
+                      {!collapsedAreas.has(area.key) && (
+                        <Droppable droppableId={`bottom-${area.key}`} type="objective">
+                          {(provided) => (
+                            <div
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                              className="pl-4 space-y-1"
+                            >
+                              {objectives
+                                .filter(obj => obj.area_key === area.key)
+                                .sort((a, b) => a.order_index - b.order_index)
+                                .map((objective, index) => (
+                                  <Draggable key={`bottom-${objective.key}`} draggableId={objective.key} index={index}>
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className={`group ${snapshot.isDragging ? 'opacity-50' : ''}`}
+                                      >
+                                        {/* Objective */}
+                                        <div className="flex items-center italic">
+                                          <span className={objective.status === 'complete' ? 'line-through' : ''}>
+                                            {index + 1}. {objective.text}
+                                          </span>
+                                        </div>
+
+                                        {/* Tasks under Objective */}
+                                        <Droppable droppableId={`${objective.key}-objective`} type="task">
+                                          {(provided) => (
+                                            <div
+                                              {...provided.droppableProps}
+                                              ref={provided.innerRef}
+                                              className="pl-4 space-y-1 mt-1 mb-4"
+                                            >
+                                              {tasks
+                                                .filter(task => task.objective_key === objective.key)
+                                                .sort((a, b) => a.order_index - b.order_index)
+                                                .map((task, index) => (
+                                                  <TaskItem
+                                                    key={`task-${task.key}`}
+                                                    task={task}
+                                                    index={index}
+                                                    editing={editingTask?.key === task.key}
+                                                    editingTask={editingTask}
+                                                    onEdit={handleTaskClick}
+                                                    onComplete={handleCompleteTask}
+                                                    onDelete={handleDeleteTask}
+                                                    onSecondary={handleSecondaryTask}
+                                                    inputRef={editInputBottomRef}
+                                                    onChange={handleTaskChange}
+                                                    onBlur={handleTaskBlur}
+                                                    onKeyDown={handleTaskKeyPress}
+                                                  />
+                                                ))}
+                                              {provided.placeholder}
+                                              <div className="group flex items-center">
+                                                <PlusIcon
+                                                  className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
+                                                  onClick={() => handleAddTask(objective.key, 'objective')}
+                                                />
+                                              </div>
+                                            </div>
+                                          )}
+                                        </Droppable>
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
+                              {provided.placeholder}
+
+                              {/* Tasks directly under Area */}
+                              <Droppable droppableId={`${area.key}-area`} type="task">
+                                {(provided) => (
+                                  <div
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                    className="space-y-1 mt-4"
+                                  >
+                                    {tasks
+                                      .filter(task => task.area_key === area.key)
+                                      .sort((a, b) => a.order_index - b.order_index)
+                                      .map((task, index) => (
+                                        <TaskItem
+                                          key={`task-${task.key}`}
+                                          task={task}
+                                          index={index}
+                                          editing={editingTask?.key === task.key}
+                                          editingTask={editingTask}
+                                          onEdit={handleTaskClick}
+                                          onComplete={handleCompleteTask}
+                                          onDelete={handleDeleteTask}
+                                          onSecondary={handleSecondaryTask}
+                                          inputRef={editInputBottomRef}
+                                          onChange={handleTaskChange}
+                                          onBlur={handleTaskBlur}
+                                          onKeyDown={handleTaskKeyPress}
+                                        />
+                                      ))}
+                                    {provided.placeholder}
+                                    <div className="group flex items-center">
+                                      <PlusIcon
+                                        className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
+                                        onClick={() => handleAddTask(area.key, 'area')}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </Droppable>
+                            </div>
+                          )}
+                        </Droppable>
+                      )}
                     </div>
                   )}
-                </Droppable>
-              </div>
-            )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
           )}
-        </div>
-      ))}
+        </Droppable>
       </div>
     </DragDropContext>
   </div>
