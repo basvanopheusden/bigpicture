@@ -729,6 +729,7 @@ return (
                           </div>
                         )}
                       </Droppable>
+                      </>
                     </div>
                   )}
                 </Draggable>
@@ -856,7 +857,6 @@ return (
                 </Droppable>
               </div>
             )}
-            </>
           )}
         </div>
       ))}
