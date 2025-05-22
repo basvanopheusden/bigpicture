@@ -76,9 +76,9 @@ The frontend is served on [http://localhost:3000](http://localhost:3000) and the
 API is available on [http://localhost:8080](http://localhost:8080).
 
 ## Running Tests
-Execute the backend unit tests using Python's `unittest`:
+Run the backend tests with `pytest -q`:
 ```bash
-python -m unittest discover -s tests
+pytest -q
 ```
 
 For simple frontend checks using Node's built-in test runner:
