@@ -1,0 +1,41 @@
+# fly.toml app configuration file generated for bigpicture-frontend-ancient-night-2172 on 2024-11-12T22:29:36-08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'bigpicture-frontend-ancient-night-2172'
+primary_region = 'lax'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+  [build.args]
+    VITE_API_URL = 'https://bigpicture-backend.fly.dev'
+
+[env]
+  PORT = '80'
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 80
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+
+  [[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
