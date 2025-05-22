@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Cross2Icon, PlusIcon, CheckIcon } from '@radix-ui/react-icons';
+import { Cross2Icon, PlusIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import TaskItem from './TaskItem';
 import { v4 as uuidv4 } from 'uuid';
 import apiWrapper from '../api';
@@ -17,6 +17,10 @@ const TaskManager = () => {
     const [editingTask, setEditingTask] = useState(null);
     const [lastKeyDown, setLastKeyDown] = useState(null);
     const [error, setError] = useState(null);
+    const [collapsedAreas, setCollapsedAreas] = useState(() => {
+      const stored = localStorage.getItem('collapsedAreas');
+      return new Set(stored ? JSON.parse(stored) : []);
+    });
     const editInputRef = useRef(null);
     const editInputBottomRef = useRef(null);
   
@@ -45,10 +49,14 @@ const TaskManager = () => {
           handleUndo();
         }
       };
-  
+
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
+
+    useEffect(() => {
+      localStorage.setItem('collapsedAreas', JSON.stringify([...collapsedAreas]));
+    }, [collapsedAreas]);
   
     const refreshAll = async () => {
       try {
@@ -154,6 +162,18 @@ const handleAreaClick = (area, event, isBottom = false) => {
     } catch (error) {
       console.error('Failed to delete area:', error);
     }
+  };
+
+  const toggleAreaCollapse = (key) => {
+    setCollapsedAreas(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
   };
 
   // Objective handlers
@@ -598,6 +618,12 @@ return (
                         className="group flex items-center mb-2"
                         onClick={(e) => handleAreaClick(area, e)}
                       >
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleAreaCollapse(area.key); }}
+                          className="mr-2"
+                        >
+                          {collapsedAreas.has(area.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
+                        </button>
                         <div className="flex-grow flex items-center">
                           {editingArea?.key === area.key ? (
                             <input
@@ -627,14 +653,16 @@ return (
                         </div>
                       </div>
 
-                      {/* Objectives section */}
-                      <Droppable droppableId={area.key} type="objective">
-                        {(provided) => (
-                          <div 
-                            {...provided.droppableProps} 
-                            ref={provided.innerRef}
-                            className="pl-4 space-y-1"
-                          >
+                        {!collapsedAreas.has(area.key) && (
+                          <>
+                            {/* Objectives section */}
+                            <Droppable droppableId={area.key} type="objective">
+                              {(provided) => (
+                                <div
+                                  {...provided.droppableProps}
+                                  ref={provided.innerRef}
+                                  className="pl-4 space-y-1"
+                                >
                             {objectives
                               .filter(obj => obj.area_key === area.key)
                               .sort((a, b) => a.order_index - b.order_index)
@@ -722,16 +750,25 @@ return (
         {areas.map((area) => (
           <div key={`bottom-${area.key}`} className="space-y-4">
             {/* Area header */}
-            <div className="font-extrabold mb-2">{area.text}</div>
+            <div className="font-extrabold mb-2 flex items-center">
+              <button
+                onClick={() => toggleAreaCollapse(area.key)}
+                className="mr-2"
+              >
+                {collapsedAreas.has(area.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
+              </button>
+              {area.text}
+            </div>
 
             {/* Objectives and their tasks */}
-            <div className="pl-4 space-y-1">
-              {objectives
-                .filter(obj => obj.area_key === area.key)
-                .sort((a, b) => a.order_index - b.order_index)
-                .map((objective, index) => (
-                  <div key={`bottom-${objective.key}`} className="group">
-                    {/* Objective */}
+            {!collapsedAreas.has(area.key) && (
+              <div className="pl-4 space-y-1">
+                {objectives
+                  .filter(obj => obj.area_key === area.key)
+                  .sort((a, b) => a.order_index - b.order_index)
+                  .map((objective, index) => (
+                    <div key={`bottom-${objective.key}`} className="group">
+                      {/* Objective */}
                     <div className="flex items-center italic">
                       <span className={objective.status === 'complete' ? 'line-through' : ''}>
                         {index + 1}. {objective.text}
@@ -776,50 +813,53 @@ return (
                         </div>
                       )}
                     </Droppable>
-                  </div>
-                ))}
-
-              {/* Tasks directly under Area */}
-              <Droppable droppableId={`${area.key}-area`} type="task">
-                {(provided) => (
-                  <div 
-                    {...provided.droppableProps} 
-                    ref={provided.innerRef}
-                    className="space-y-1 mt-4"
-                  >
-                    {tasks
-                      .filter(task => task.area_key === area.key)
-                      .sort((a, b) => a.order_index - b.order_index)
-                      .map((task, index) => (
-                        <TaskItem
-                          key={`task-${task.key}`}
-                          task={task}
-                          index={index}
-                          editing={editingTask?.key === task.key}
-                          editingTask={editingTask}
-                          onEdit={handleTaskClick}
-                          onComplete={handleCompleteTask}
-                          onDelete={handleDeleteTask}
-                          onSecondary={handleSecondaryTask}
-                          inputRef={editInputBottomRef}
-                          onChange={handleTaskChange}
-                          onBlur={handleTaskBlur}
-                          onKeyDown={handleTaskKeyPress}
-                        />
-                      ))}
-                    {provided.placeholder}
-                    <div className="group flex items-center">
-                      <PlusIcon
-                        className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-                        onClick={() => handleAddTask(area.key, 'area')}
-                      />
                     </div>
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          </div>
-        ))}
+                  ))}
+
+                {/* Tasks directly under Area */}
+                <Droppable droppableId={`${area.key}-area`} type="task">
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="space-y-1 mt-4"
+                    >
+                      {tasks
+                        .filter(task => task.area_key === area.key)
+                        .sort((a, b) => a.order_index - b.order_index)
+                        .map((task, index) => (
+                          <TaskItem
+                            key={`task-${task.key}`}
+                            task={task}
+                            index={index}
+                            editing={editingTask?.key === task.key}
+                            editingTask={editingTask}
+                            onEdit={handleTaskClick}
+                            onComplete={handleCompleteTask}
+                            onDelete={handleDeleteTask}
+                            onSecondary={handleSecondaryTask}
+                            inputRef={editInputBottomRef}
+                            onChange={handleTaskChange}
+                            onBlur={handleTaskBlur}
+                            onKeyDown={handleTaskKeyPress}
+                          />
+                        ))}
+                      {provided.placeholder}
+                      <div className="group flex items-center">
+                        <PlusIcon
+                          className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
+                          onClick={() => handleAddTask(area.key, 'area')}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            )}
+            </>
+          )}
+        </div>
+      ))}
       </div>
     </DragDropContext>
   </div>
