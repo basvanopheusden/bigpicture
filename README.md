@@ -13,7 +13,7 @@ This repository contains a small Flask backend and a React frontend built with V
    ```bash
    python -m venv venv && source venv/bin/activate
    ```
-3. Install dependencies
+3. Install dependencies (the `requirements.txt` file lives in `backend/`)
    ```bash
    pip install -r requirements.txt
    ```
