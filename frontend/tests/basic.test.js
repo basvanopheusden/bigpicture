@@ -36,3 +36,12 @@ test('main.jsx renders App inside StrictMode', () => {
   assert.match(src, /<StrictMode>/);
   assert.match(src, /<App \/>/);
 });
+
+test('TaskItem component is imported and defined', () => {
+  const managerSrc = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
+  assert.match(managerSrc, /from '.\/TaskItem'/);
+
+  const itemSrc = readFileSync(resolve('src/components/TaskItem.jsx'), 'utf8');
+  assert.match(itemSrc, /const TaskItem/);
+  assert.match(itemSrc, /export default TaskItem/);
+});
