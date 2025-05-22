@@ -27,7 +27,8 @@ This repository contains a small Flask backend and a React frontend built with V
 - `PORT` &ndash; port the Flask app listens on (default `8080`)
 - `FLASK_ENV` &ndash; Flask environment (`production` by default)
 - `FLASK_APP` &ndash; entrypoint used when running via `flask` or gunicorn
-- `DATABASE_URL` &ndash; path to the SQLite database (Docker uses `/data/tasks.db`)
+- `DATABASE_URL` &ndash; path to the SQLite database. Defaults to `tasks.db` when
+  running locally; the Docker images use `/data/tasks.db`.
 - `CORS_ORIGINS` &ndash; comma separated list of allowed origins for CORS
 
 ### Docker usage
@@ -58,6 +59,17 @@ docker run -p 8080:8080 bigpicture-backend
 docker build -t bigpicture-frontend ./frontend
 docker run -p 80:80 -e VITE_API_URL=http://localhost:8080 bigpicture-frontend
 ```
+
+## Local deployment with Docker Compose
+The repository includes a `docker-compose.yml` file that runs both the backend
+and frontend locally.  Build and start the stack with:
+
+```bash
+docker compose up --build
+```
+
+The frontend is served on [http://localhost:3000](http://localhost:3000) and the
+API is available on [http://localhost:8080](http://localhost:8080).
 
 ## Running Tests
 Execute the backend unit tests using Python's `unittest`:

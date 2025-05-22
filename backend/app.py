@@ -7,6 +7,12 @@ import pytz
 
 app = Flask(__name__)
 
+# Determine where the SQLite database should live.  In production the
+# Docker image writes to ``/data/tasks.db`` but for local development we
+# fall back to ``tasks.db`` in the repository root.  The path can be
+# overridden via the ``DATABASE_URL`` environment variable.
+DB_PATH = os.environ.get('DATABASE_URL', 'tasks.db')
+
 app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(app, 
      resources={r"/api/*": {
@@ -27,9 +33,13 @@ def get_pacific_time():
     return datetime.now(pacific).isoformat()
 
 def init_db():
-    print("Initializing database...")
+    print("Initializing database at %s..." % DB_PATH)
     try:
-        with sqlite3.connect('tasks.db') as conn:
+        # Ensure the parent directory exists when using a path like /data/tasks.db
+        dir_name = os.path.dirname(DB_PATH)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+        with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
         
             # Create areas table if it doesn't exist
@@ -96,9 +106,8 @@ with app.app_context():
 
 def get_db():
     try:
-        db_path = '/data/tasks.db'
-        print(f"Attempting to connect to DB at: {db_path}")
-        conn = sqlite3.connect(db_path)
+        print(f"Attempting to connect to DB at: {DB_PATH}")
+        conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         return conn
     except Exception as e:
