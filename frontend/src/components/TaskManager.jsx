@@ -1,61 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Cross2Icon, PlusIcon, CheckIcon, CircleIcon } from '@radix-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
-import { API_BASE_URL } from '../config';
+import apiWrapper from '../api';
 import ReactMarkdown from 'react-markdown';
-
-// Axios instance with base configuration
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// API wrapper functions for better error handling and consistent responses
-const apiWrapper = {
-  get: async (endpoint) => {
-    try {
-      const response = await api.get(endpoint);
-      return response.data;
-    } catch (error) {
-      console.error(`API Error (GET ${endpoint}):`, error);
-      throw error;
-    }
-  },
-  
-  post: async (endpoint, data) => {
-    try {
-      const response = await api.post(endpoint, data);
-      return response.data;
-    } catch (error) {
-      console.error(`API Error (POST ${endpoint}):`, error);
-      throw error;
-    }
-  },
-  
-  patch: async (endpoint, data) => {
-    try {
-      const response = await api.patch(endpoint, data);
-      return response.data;
-    } catch (error) {
-      console.error(`API Error (PATCH ${endpoint}):`, error);
-      throw error;
-    }
-  },
-  
-  delete: async (endpoint) => {
-    try {
-      const response = await api.delete(endpoint);
-      return response.data;
-    } catch (error) {
-      console.error(`API Error (DELETE ${endpoint}):`, error);
-      throw error;
-    }
-  }
-};
 const TaskManager = () => {
     const [authenticated, setAuthenticated] = useState(false);
     const [passcode, setPasscode] = useState('');
