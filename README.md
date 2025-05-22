@@ -81,6 +81,12 @@ Execute the backend unit tests using Python's `unittest`:
 python -m unittest discover -s tests
 ```
 
+For simple frontend checks using Node's built-in test runner:
+```bash
+cd frontend
+npm test
+```
+
 ## Repository Layout
 - `backend/` &ndash; Flask application and Dockerfile
 - `frontend/` &ndash; React/Vite frontend and Dockerfile
