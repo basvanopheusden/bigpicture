@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Cross2Icon, PlusIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import TaskItem from './TaskItem';
@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import apiWrapper from '../api';
 import ReactMarkdown from 'react-markdown';
 import { getStoredAuth, storeAuth, clearAuth } from '../utils/auth';
+import { divSpec, specToReact } from '../utils/divBuilder';
 const TaskManager = () => {
     const [authenticated, setAuthenticated] = useState(false);
     const [passcode, setPasscode] = useState('');
@@ -566,18 +567,24 @@ const handleTaskChange = (e) => {
   };
 
   if (!authenticated) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center font-mate bg-[#f5f5dc]">
-        <input
-          type="password"
-          value={passcode}
-          onChange={(e) => setPasscode(e.target.value)}
-          onKeyPress={handleKeyPress}
-          className="border p-2 text-center w-48 outline-none text-sm bg-transparent"
-          autoFocus
-        />
-      </div>
-    );
+    const spec = divSpec({
+      className: 'h-screen w-screen flex items-center justify-center font-mate bg-[#f5f5dc]',
+      children: [
+        divSpec({
+          children: (
+            <input
+              type="password"
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="border p-2 text-center w-48 outline-none text-sm bg-transparent"
+              autoFocus
+            />
+          )
+        })
+      ]
+    });
+    return specToReact(spec, React);
   }
 
 // This goes in your TaskManager component, replacing the current return statement
