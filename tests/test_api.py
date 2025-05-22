@@ -2,6 +2,7 @@ import os
 import sqlite3
 import tempfile
 import unittest
+import json
 
 import backend.app as app
 
@@ -182,6 +183,27 @@ class APITestCase(unittest.TestCase):
     def test_undo_without_actions(self):
         resp = self.client.post('/api/undo')
         self.assertEqual(resp.status_code, 404)
+
+    def test_area_update_and_undo(self):
+        # create area
+        self.client.post('/api/areas', json={"key": "area1", "text": "Area 1"})
+
+        # update area text
+        self.client.patch('/api/areas/area1', json={"text": "Updated"})
+
+        # ensure undo log stored JSON
+        conn = sqlite3.connect(self.db_path)
+        row = conn.execute('SELECT old_data FROM undo_log ORDER BY id DESC LIMIT 1').fetchone()
+        stored = row[0]
+        parsed = json.loads(stored)
+        self.assertEqual(parsed['text'], 'Area 1')
+        conn.close()
+
+        # undo update
+        resp = self.client.post('/api/undo')
+        self.assertEqual(resp.status_code, 200)
+        area = self.client.get('/api/areas').get_json()[0]
+        self.assertEqual(area['text'], 'Area 1')
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
@@ -118,9 +119,10 @@ def get_db():
 
 
 def log_action_for_undo(conn, action_type, table_name, record_key, old_data):
+    json_data = json.dumps(old_data)
     conn.execute(
         'INSERT INTO undo_log (action_type, table_name, record_key, old_data, timestamp) VALUES (?, ?, ?, ?, ?)',
-        (action_type, table_name, record_key, old_data, get_pacific_time())
+        (action_type, table_name, record_key, json_data, get_pacific_time())
     )
     conn.commit()
 
@@ -189,7 +191,7 @@ def handle_area(key):
                 # Get current state for undo
                 current = conn.execute('SELECT * FROM areas WHERE key = ?', (key,)).fetchone()
                 if current:
-                    log_action_for_undo(conn, 'UPDATE', 'areas', key, str(dict(current)))
+                    log_action_for_undo(conn, 'UPDATE', 'areas', key, dict(current))
 
                 updates = []
                 values = []
@@ -235,18 +237,18 @@ def handle_area(key):
                 # Log current state of area and its children for undo
                 area = conn.execute('SELECT * FROM areas WHERE key = ?', (key,)).fetchone()
                 if area:
-                    log_action_for_undo(conn, 'DELETE', 'areas', key, str(dict(area)))
+                    log_action_for_undo(conn, 'DELETE', 'areas', key, dict(area))
                     
                 objectives = conn.execute('SELECT * FROM objectives WHERE area_key = ?', (key,)).fetchall()
                 for obj in objectives:
-                    log_action_for_undo(conn, 'DELETE', 'objectives', obj['key'], str(dict(obj)))
+                    log_action_for_undo(conn, 'DELETE', 'objectives', obj['key'], dict(obj))
                     tasks = conn.execute('SELECT * FROM tasks WHERE objective_key = ?', (obj['key'],)).fetchall()
                     for task in tasks:
-                        log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], str(dict(task)))
+                        log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], dict(task))
 
                 area_tasks = conn.execute('SELECT * FROM tasks WHERE area_key = ?', (key,)).fetchall()
                 for task in area_tasks:
-                    log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], str(dict(task)))
+                    log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], dict(task))
 
                 conn.execute('DELETE FROM areas WHERE key = ?', (key,))
                 conn.commit()
@@ -305,7 +307,7 @@ def handle_objective(key):
                 # Get current state for undo
                 current = conn.execute('SELECT * FROM objectives WHERE key = ?', (key,)).fetchone()
                 if current:
-                    log_action_for_undo(conn, 'UPDATE', 'objectives', key, str(dict(current)))
+                    log_action_for_undo(conn, 'UPDATE', 'objectives', key, dict(current))
 
                 updates = []
                 values = []
@@ -401,11 +403,11 @@ def handle_objective(key):
                 # Log current state for undo
                 objective = conn.execute('SELECT * FROM objectives WHERE key = ?', (key,)).fetchone()
                 if objective:
-                    log_action_for_undo(conn, 'DELETE', 'objectives', key, str(dict(objective)))
+                    log_action_for_undo(conn, 'DELETE', 'objectives', key, dict(objective))
                     # Log child tasks
                     tasks = conn.execute('SELECT * FROM tasks WHERE objective_key = ?', (key,)).fetchall()
                     for task in tasks:
-                        log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], str(dict(task)))
+                        log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], dict(task))
 
                 conn.execute('DELETE FROM objectives WHERE key = ?', (key,))
                 conn.commit()
@@ -508,7 +510,7 @@ def handle_task(key):
                     return jsonify({"error": "Task not found"}), 404
                 
                 # Log for undo
-                log_action_for_undo(conn, 'DELETE', 'tasks', key, str(dict(task)))
+                log_action_for_undo(conn, 'DELETE', 'tasks', key, dict(task))
                 
                 # Update order indices for remaining tasks
                 task_dict = dict(task)
@@ -542,7 +544,7 @@ def handle_task(key):
                 current_dict = dict(current)
                 
                 # Log current state for undo
-                log_action_for_undo(conn, 'UPDATE', 'tasks', key, str(current_dict))
+                log_action_for_undo(conn, 'UPDATE', 'tasks', key, current_dict)
                 
                 # Handle basic updates (text and status)
                 updates = []
@@ -710,7 +712,7 @@ def undo_last_action():
                 return jsonify({"error": "No actions to undo"}), 404
 
             action_data = dict(last_action)
-            old_data = eval(action_data['old_data'])  # Convert string representation back to dict
+            old_data = json.loads(action_data['old_data'])
 
             # Restore the data based on action type
             if action_data['action_type'] == 'DELETE':
