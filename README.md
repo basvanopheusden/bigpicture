@@ -92,3 +92,5 @@ npm test
 - `frontend/` &ndash; React/Vite frontend and Dockerfile
 - `tests/` &ndash; simple API tests
 
+## License
+This project is licensed under the [MIT License](LICENSE).
