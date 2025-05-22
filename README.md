@@ -4,7 +4,7 @@ This repository contains a small Flask backend and a React frontend built with V
 
 ## Prerequisites
 - **Python 3.9+** and `pip` for the backend
-- **Node.js 18+** and `npm` for the frontend
+- **Node.js 20 LTS** and `npm` for the frontend
 - [Docker](https://www.docker.com/) (optional) if you prefer containerized runs
 
 ## Running the Backend
@@ -48,6 +48,10 @@ docker run -p 8080:8080 bigpicture-backend
    npm run dev
    ```
    The dev server runs on [http://localhost:5173](http://localhost:5173).
+
+   If you encounter an error about a missing `@rollup/rollup-*-arm64` module on
+   macOS, remove `node_modules` and `package-lock.json`, ensure you are using
+   Node.js 20 (e.g. `nvm use 20`), then reinstall with `npm install`.
 
 ### Environment variables
 - `VITE_API_URL` &ndash; URL of the backend API. If unset, the app falls back to
