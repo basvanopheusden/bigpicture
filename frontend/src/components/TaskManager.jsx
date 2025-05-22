@@ -148,7 +148,7 @@ const TaskManager = () => {
   
     const handleKeyPress = (event) => {
       if (event.key === 'Enter') {
-        if (passcode === 'fart') {
+        if (passcode === 'sneeze') {
           setAuthenticated(true);
         } else {
           setPasscode('');
