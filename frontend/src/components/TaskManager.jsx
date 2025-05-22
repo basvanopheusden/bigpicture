@@ -728,6 +728,7 @@ return (
                             </div>
                           )}
                         </Droppable>
+                      )}
                     </div>
                   )}
                 </Draggable>
