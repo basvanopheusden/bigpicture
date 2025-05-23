@@ -38,8 +38,8 @@ test('main.jsx renders App inside StrictMode', () => {
 });
 
 test('TaskItem component is imported and defined', () => {
-  const managerSrc = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
-  assert.match(managerSrc, /from '.\/TaskItem'/);
+  const taskListSrc = readFileSync(resolve('src/components/TaskList.jsx'), 'utf8');
+  assert.match(taskListSrc, /from '.\/TaskItem'/);
 
   const itemSrc = readFileSync(resolve('src/components/TaskItem.jsx'), 'utf8');
   assert.match(itemSrc, /const TaskItem/);
