@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Cross2Icon, PlusIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
-import TaskItem from './TaskItem';
+import { DragDropContext } from '@hello-pangea/dnd';
+import AreaList from './AreaList';
+import ObjectiveList from './ObjectiveList';
+import TaskList from './TaskList';
+import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
 import apiWrapper from '../api';
 import ReactMarkdown from 'react-markdown';
@@ -587,22 +589,21 @@ const handleTaskChange = (e) => {
     return specToReact(spec, React);
   }
 
-// This goes in your TaskManager component, replacing the current return statement
 return (
   <div className="min-h-screen h-full flex flex-col text-xs sm:text-sm font-mate min-w-full">
-      <DragDropContext onDragEnd={(result) => {
-      // Call onDragEnd and get its promise
-      const dragPromise = onDragEnd(result);
-      
-      // Chain the refreshAll after onDragEnd completes
-      dragPromise.then(() => {
-        refreshAll();
-      }).catch(error => {
-        console.error("Error during drag operation:", error);
-        refreshAll();
-      });
-    }}>
-      {/* Undo button */}
+    <DragDropContext
+      onDragEnd={(result) => {
+        const dragPromise = onDragEnd(result);
+        dragPromise
+          .then(() => {
+            refreshAll();
+          })
+          .catch((error) => {
+            console.error("Error during drag operation:", error);
+            refreshAll();
+          });
+      }}
+    >
       <div className="fixed top-4 right-4">
         <button onClick={handleUndo} className="text-gray-400 hover:text-black">
           ↺
@@ -615,273 +616,79 @@ return (
         </div>
       )}
 
-      {/* Top section */}
-      <div className="flex-1 border-b p-4 sm:p-8 mx-2 sm:mx-32 max-w-[1200px] sm:max-w-none mt-4">
-        <Droppable droppableId="areas-list-top" type="area">
-          {(provided) => (
-            <div 
-              {...provided.droppableProps} 
-              ref={provided.innerRef}
-              className="space-y-4"
-            >
-              {areas.map((area, index) => (
-                <Draggable key={area.key} draggableId={area.key} index={index}>
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className={`${snapshot.isDragging ? 'opacity-50' : ''}`}
-                    >
-                      {/* Area header */}
-                      <div
-                        className="group flex items-center mb-2"
-                        onClick={(e) => handleAreaClick(area, e)}
-                      >
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleAreaCollapse(area.key); }}
-                          className="mr-2"
-                        >
-                          {collapsedAreas.has(area.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
-                        </button>
-                        <div className="flex-grow flex items-center">
-                          {editingArea?.key === area.key ? (
-                            <input
-                              ref={editInputRef}
-                              value={editingArea.text}
-                              onChange={handleAreaChange}
-                              onBlur={handleAreaBlur}
-                              onKeyDown={handleAreaKeyPress}
-                              className="font-extrabold outline-none font-mate text-sm bg-transparent"
-                            />
-                          ) : (
-                            <>
-                              <ReactMarkdown 
-                                className="font-extrabold"
-                                components={{
-                                  p: ({node, ...props}) => <span {...props} />,
-                                }}
-                              >
-                                {area.text || '_'}
-                              </ReactMarkdown>
-                              <Cross2Icon 
-                                className="invisible group-hover:visible cursor-pointer ml-4 text-gray-400 hover:text-black delete-button h-3 w-3"
-                                onClick={(e) => handleDeleteArea(area.key, e)}
-                              />
-                            </>
-                          )}
-                        </div>
-                      </div>
+      <AreaList
+        areas={areas}
+        objectives={objectives}
+        collapsedAreas={collapsedAreas}
+        editingArea={editingArea}
+        editingObjective={editingObjective}
+        editInputRef={editInputRef}
+        handleAreaClick={handleAreaClick}
+        toggleAreaCollapse={toggleAreaCollapse}
+        handleAreaChange={handleAreaChange}
+        handleAreaBlur={handleAreaBlur}
+        handleAreaKeyPress={handleAreaKeyPress}
+        handleDeleteArea={handleDeleteArea}
+        handleAddArea={handleAddArea}
+        handleObjectiveClick={handleObjectiveClick}
+        handleObjectiveChange={handleObjectiveChange}
+        handleObjectiveBlur={handleObjectiveBlur}
+        handleObjectiveKeyPress={handleObjectiveKeyPress}
+        handleCompleteObjective={handleCompleteObjective}
+        handleDeleteObjective={handleDeleteObjective}
+        handleAddObjective={handleAddObjective}
+      />
 
-                        {!collapsedAreas.has(area.key) && (
-                          // Objectives section
-                          <Droppable droppableId={area.key} type="objective">
-                              {(provided) => (
-                                <div
-                                  {...provided.droppableProps}
-                                  ref={provided.innerRef}
-                                  className="pl-4 space-y-1"
-                                >
-                            {objectives
-                              .filter(obj => obj.area_key === area.key)
-                              .sort((a, b) => a.order_index - b.order_index)
-                              .map((objective, index) => (
-                                <Draggable
-                                  key={objective.key}
-                                  draggableId={objective.key}
-                                  index={index}
-                                >
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      className={`group flex items-center ${snapshot.isDragging ? 'opacity-50' : ''}`}
-                                      onClick={(e) => handleObjectiveClick(objective, e)}
-                                    >
-                                      <div className="flex-grow flex items-center">
-                                        {editingObjective?.key === objective.key ? (
-                                          <input
-                                            ref={editInputRef}
-                                            value={editingObjective.text}
-                                            onChange={handleObjectiveChange}
-                                            onBlur={handleObjectiveBlur}
-                                            onKeyDown={handleObjectiveKeyPress}
-                                            className="outline-none font-mate text-sm bg-transparent w-full"
-                                          />
-                                        ) : (
-                                          <>
-                                            <span className={`italic ${objective.status === 'complete' ? 'line-through' : ''}`}>
-                                              {index + 1}. <ReactMarkdown 
-                                                className="inline"
-                                                components={{
-                                                  p: ({node, ...props}) => <span {...props} />,
-                                                }}
-                                              >
-                                                {objective.text || '_'}
-                                              </ReactMarkdown>
-                                            </span>
-                                            <div className="invisible group-hover:visible flex items-center ml-4">
-                                              <CheckIcon 
-                                                className="cursor-pointer text-gray-400 hover:text-black h-3 w-3 mr-2"
-                                                onClick={(e) => handleCompleteObjective(objective, e)}
-                                              />
-                                              <Cross2Icon 
-                                                className="cursor-pointer text-gray-400 hover:text-black delete-button h-3 w-3"
-                                                onClick={(e) => handleDeleteObjective(objective.key, e)}
-                                              />
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </Draggable>
-                              ))}
-                            {provided.placeholder}
-                            <div className="group flex items-center">
-                              <PlusIcon
-                                className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-                                onClick={() => handleAddObjective(area.key)}
-                              />
-                            </div>
-                            </div>
-                          )}
-                        </Droppable>
-                      )}
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-              <div className="mt-4 group flex items-center">
-                <PlusIcon
-                  className="cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-                  onClick={handleAddArea}
-                />
-              </div>
-            </div>
-          )}
-        </Droppable>
-      </div>
-
-      {/* Bottom section */}
       <div className="flex-1 p-4 sm:p-8 mx-2 sm:mx-32 max-w-[1200px] sm:max-w-none">
-        {areas.map((area) => {
-          return (
-            <div key={`bottom-${area.key}`} className="space-y-4">
-            {/* Area header */}
+        {areas.map((area) => (
+          <div key={`bottom-${area.key}`} className="space-y-4">
             <div className="font-extrabold mb-2 flex items-center">
-              <button
-                onClick={() => toggleAreaCollapse(area.key)}
-                className="mr-2"
-              >
+              <button onClick={() => toggleAreaCollapse(area.key)} className="mr-2">
                 {collapsedAreas.has(area.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
               </button>
               {area.text}
             </div>
-
-            {/* Objectives and their tasks */}
             {!collapsedAreas.has(area.key) && (
               <div className="pl-4 space-y-1">
-                {objectives
-                  .filter(obj => obj.area_key === area.key)
-                  .sort((a, b) => a.order_index - b.order_index)
-                  .map((objective, index) => (
-                    <div key={`bottom-${objective.key}`} className="group">
-                      {/* Objective */}
-                    <div className="flex items-center italic">
-                      <span className={objective.status === 'complete' ? 'line-through' : ''}>
-                        {index + 1}. {objective.text}
-                      </span>
-                    </div>
-
-                    {/* Tasks under Objective */}
-                    <Droppable droppableId={`${objective.key}-objective`} type="task">
-                      {(provided) => (
-                        <div 
-                          {...provided.droppableProps} 
-                          ref={provided.innerRef}
-                          className="pl-4 space-y-1 mt-1 mb-4"
-                        >
-                          {tasks
-                            .filter(task => task.objective_key === objective.key)
-                            .sort((a, b) => a.order_index - b.order_index)
-                            .map((task, index) => (
-                              <TaskItem
-                                key={`task-${task.key}`}
-                                task={task}
-                                index={index}
-                                editing={editingTask?.key === task.key}
-                                editingTask={editingTask}
-                                onEdit={handleTaskClick}
-                                onComplete={handleCompleteTask}
-                                onDelete={handleDeleteTask}
-                                onSecondary={handleSecondaryTask}
-                                inputRef={editInputBottomRef}
-                                onChange={handleTaskChange}
-                                onBlur={handleTaskBlur}
-                                onKeyDown={handleTaskKeyPress}
-                              />
-                            ))}
-                          {provided.placeholder}
-                          <div className="group flex items-center">
-                            <PlusIcon
-                              className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-                              onClick={() => handleAddTask(objective.key, 'objective')}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </Droppable>
-                    </div>
-                  ))}
-
-                {/* Tasks directly under Area */}
-                <Droppable droppableId={`${area.key}-area`} type="task">
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="space-y-1 mt-4"
-                    >
-                      {tasks
-                        .filter(task => task.area_key === area.key)
-                        .sort((a, b) => a.order_index - b.order_index)
-                        .map((task, index) => (
-                          <TaskItem
-                            key={`task-${task.key}`}
-                            task={task}
-                            index={index}
-                            editing={editingTask?.key === task.key}
-                            editingTask={editingTask}
-                            onEdit={handleTaskClick}
-                            onComplete={handleCompleteTask}
-                            onDelete={handleDeleteTask}
-                            onSecondary={handleSecondaryTask}
-                            inputRef={editInputBottomRef}
-                            onChange={handleTaskChange}
-                            onBlur={handleTaskBlur}
-                            onKeyDown={handleTaskKeyPress}
-                          />
-                        ))}
-                      {provided.placeholder}
-                      <div className="group flex items-center">
-                        <PlusIcon
-                          className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-                          onClick={() => handleAddTask(area.key, 'area')}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </Droppable>
+                <ObjectiveList
+                  area={area}
+                  objectives={objectives}
+                  tasks={tasks}
+                  editingTask={editingTask}
+                  editInputBottomRef={editInputBottomRef}
+                  handleTaskClick={handleTaskClick}
+                  handleCompleteTask={handleCompleteTask}
+                  handleDeleteTask={handleDeleteTask}
+                  handleSecondaryTask={handleSecondaryTask}
+                  handleTaskChange={handleTaskChange}
+                  handleTaskBlur={handleTaskBlur}
+                  handleTaskKeyPress={handleTaskKeyPress}
+                  handleAddTask={handleAddTask}
+                />
+                <TaskList
+                  tasks={tasks
+                    .filter((task) => task.area_key === area.key)
+                    .sort((a, b) => a.order_index - b.order_index)}
+                  parentId={area.key}
+                  parentType="area"
+                  editingTask={editingTask}
+                  editInputBottomRef={editInputBottomRef}
+                  handleTaskClick={handleTaskClick}
+                  handleCompleteTask={handleCompleteTask}
+                  handleDeleteTask={handleDeleteTask}
+                  handleSecondaryTask={handleSecondaryTask}
+                  handleTaskChange={handleTaskChange}
+                  handleTaskBlur={handleTaskBlur}
+                  handleTaskKeyPress={handleTaskKeyPress}
+                  handleAddTask={handleAddTask}
+                  className="space-y-1 mt-4"
+                />
               </div>
             )}
-          );
-        })}
+          </div>
+        ))}
       </div>
     </DragDropContext>
-  </div>
   </div>
 );
 };

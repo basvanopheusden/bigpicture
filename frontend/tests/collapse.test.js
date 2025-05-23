@@ -12,7 +12,11 @@ function resolve(relPath) {
 }
 
 test('TaskManager supports collapsing areas', () => {
-  const src = readFileSync(resolve('src/components/TaskManager.jsx'), 'utf8');
+  const files = [
+    'src/components/TaskManager.jsx',
+    'src/components/AreaList.jsx'
+  ];
+  const src = files.map(f => readFileSync(resolve(f), 'utf8')).join('\n');
   assert.match(src, /collapsedAreas/);
   assert.match(src, /useState\(/);
   assert.match(src, /new Set/);
