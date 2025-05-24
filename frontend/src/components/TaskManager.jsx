@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import AreaList from './AreaList';
-import ObjectiveList from './ObjectiveList';
-import TaskList from './TaskList';
-import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { v4 as uuidv4 } from 'uuid';
 import apiWrapper from '../api';
 import ReactMarkdown from 'react-markdown';
@@ -619,10 +616,13 @@ return (
       <AreaList
         areas={areas}
         objectives={objectives}
+        tasks={tasks}
         collapsedAreas={collapsedAreas}
         editingArea={editingArea}
         editingObjective={editingObjective}
+        editingTask={editingTask}
         editInputRef={editInputRef}
+        editInputBottomRef={editInputBottomRef}
         handleAreaClick={handleAreaClick}
         toggleAreaCollapse={toggleAreaCollapse}
         handleAreaChange={handleAreaChange}
@@ -637,57 +637,15 @@ return (
         handleCompleteObjective={handleCompleteObjective}
         handleDeleteObjective={handleDeleteObjective}
         handleAddObjective={handleAddObjective}
+        handleTaskClick={handleTaskClick}
+        handleCompleteTask={handleCompleteTask}
+        handleDeleteTask={handleDeleteTask}
+        handleSecondaryTask={handleSecondaryTask}
+        handleTaskChange={handleTaskChange}
+        handleTaskBlur={handleTaskBlur}
+        handleTaskKeyPress={handleTaskKeyPress}
+        handleAddTask={handleAddTask}
       />
-
-      <div className="flex-1 p-4 sm:p-8 mx-2 sm:mx-32 max-w-[1200px] sm:max-w-none">
-        {areas.map((area) => (
-          <div key={`bottom-${area.key}`} className="space-y-4">
-            <div className="font-extrabold mb-2 flex items-center">
-              <button onClick={() => toggleAreaCollapse(area.key)} className="mr-2">
-                {collapsedAreas.has(area.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
-              </button>
-              {area.text}
-            </div>
-            {!collapsedAreas.has(area.key) && (
-              <div className="pl-4 space-y-1">
-                <ObjectiveList
-                  area={area}
-                  objectives={objectives}
-                  tasks={tasks}
-                  editingTask={editingTask}
-                  editInputBottomRef={editInputBottomRef}
-                  handleTaskClick={handleTaskClick}
-                  handleCompleteTask={handleCompleteTask}
-                  handleDeleteTask={handleDeleteTask}
-                  handleSecondaryTask={handleSecondaryTask}
-                  handleTaskChange={handleTaskChange}
-                  handleTaskBlur={handleTaskBlur}
-                  handleTaskKeyPress={handleTaskKeyPress}
-                  handleAddTask={handleAddTask}
-                />
-                <TaskList
-                  tasks={tasks
-                    .filter((task) => task.area_key === area.key)
-                    .sort((a, b) => a.order_index - b.order_index)}
-                  parentId={area.key}
-                  parentType="area"
-                  editingTask={editingTask}
-                  editInputBottomRef={editInputBottomRef}
-                  handleTaskClick={handleTaskClick}
-                  handleCompleteTask={handleCompleteTask}
-                  handleDeleteTask={handleDeleteTask}
-                  handleSecondaryTask={handleSecondaryTask}
-                  handleTaskChange={handleTaskChange}
-                  handleTaskBlur={handleTaskBlur}
-                  handleTaskKeyPress={handleTaskKeyPress}
-                  handleAddTask={handleAddTask}
-                  className="space-y-1 mt-4"
-                />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
     </DragDropContext>
   </div>
 );
