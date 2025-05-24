@@ -49,7 +49,10 @@ def create_app() -> Flask:
     with app.app_context():
         init_db()
 
-    from .routes import register_routes
+    try:
+        from .routes import register_routes
+    except ImportError:  # pragma: no cover - executed only when run as script
+        from routes import register_routes
 
     register_routes(app)
     return app
