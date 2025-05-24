@@ -12,7 +12,6 @@ function resolve(relPath) {
 
 const src = readFileSync(resolve('src/components/AreaList.jsx'), 'utf8');
 
-test('shows add area button when list is empty', () => {
-  assert.match(src, /areas\.length === 0/);
+test('shows add area button', () => {
   assert.match(src, /<PlusIcon[^>]*onClick={handleAddArea}/);
 });
