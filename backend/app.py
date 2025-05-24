@@ -276,17 +276,25 @@ def handle_objective(key):
                     if data['status'] == 'complete':
                         updates.append('date_time_completed = ?')
                         values.append(get_pacific_time())
-                        
+
                         # Also complete all child tasks
                         conn.execute('''
-                            UPDATE tasks 
-                            SET status = 'complete', 
-                                date_time_completed = ? 
+                            UPDATE tasks
+                            SET status = 'complete',
+                                date_time_completed = ?
                             WHERE objective_key = ? AND status != 'complete'
                         ''', (get_pacific_time(), key))
                     else:
                         updates.append('date_time_completed = ?')
                         values.append(None)
+
+                        # Reopen all child tasks
+                        conn.execute('''
+                            UPDATE tasks
+                            SET status = 'open',
+                                date_time_completed = NULL
+                            WHERE objective_key = ?
+                        ''', (key,))
                 
                 # Execute the main update
                 if updates:

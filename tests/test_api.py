@@ -167,6 +167,24 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(data['status'], 'complete')
         self.assertEqual(data['date_time_completed'], "2021-01-01T00:00:00")
 
+    def test_tasks_reopen_when_objective_reopened(self):
+        self.client.post('/api/areas', json={"key": "area1", "text": "Area 1"})
+        self.client.post('/api/objectives', json={"key": "obj1", "area_key": "area1", "text": "Obj"})
+        self.client.post('/api/tasks', json={"key": "t1", "text": "Task 1", "objective_key": "obj1"})
+        self.client.post('/api/tasks', json={"key": "t2", "text": "Task 2", "objective_key": "obj1"})
+
+        # mark objective complete
+        self.client.patch('/api/objectives/obj1', json={"status": "complete"})
+        tasks = self.client.get('/api/tasks').get_json()
+        statuses = {t['key']: t['status'] for t in tasks if t['objective_key'] == 'obj1'}
+        self.assertEqual(statuses, {'t1': 'complete', 't2': 'complete'})
+
+        # reopen objective
+        self.client.patch('/api/objectives/obj1', json={"status": "open"})
+        tasks = self.client.get('/api/tasks').get_json()
+        statuses = {t['key']: (t['status'], t['date_time_completed']) for t in tasks if t['objective_key'] == 'obj1'}
+        self.assertEqual(statuses, {'t1': ('open', None), 't2': ('open', None)})
+
     def test_create_task_missing_parent(self):
         self.client.post('/api/areas', json={"key": "area1", "text": "Area 1"})
         resp = self.client.post('/api/tasks', json={"key": "t1", "text": "Task"})
