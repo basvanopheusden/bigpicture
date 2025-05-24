@@ -136,9 +136,9 @@ const handleAreaClick = (area, event, isBottom = false) => {
 
   const handleAreaBlur = async () => {
     if (!editingArea) return;
-    
+
     try {
-      if (!editingArea.text.trim() && lastKeyDown === 'Backspace') {
+      if (!editingArea.text.trim()) {
         await handleDeleteArea(editingArea.key, new Event('dummy'));
       } else {
         await apiWrapper.patch(`/api/areas/${editingArea.key}`, {
@@ -200,9 +200,9 @@ const handleAreaClick = (area, event, isBottom = false) => {
 
   const handleObjectiveBlur = async () => {
     if (!editingObjective) return;
-    
+
     try {
-      if (!editingObjective.text.trim() && lastKeyDown === 'Backspace') {
+      if (!editingObjective.text.trim()) {
         await handleDeleteObjective(editingObjective.key, new Event('dummy'));
       } else {
         await apiWrapper.patch(`/api/objectives/${editingObjective.key}`, {
