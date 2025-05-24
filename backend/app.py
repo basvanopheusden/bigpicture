@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -26,6 +27,7 @@ except ImportError:  # pragma: no cover - executed only when run as script
     from utils import parse_json
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(app,
@@ -72,7 +74,7 @@ def handle_areas():
                 result = [dict(area) for area in areas]
                 return jsonify(result)
         except Exception as e:
-            print(f"Error getting areas: {e}")
+            logging.error(f"Error getting areas: {e}")
             return jsonify({"error": str(e)}), 500
     
     if request.method == 'POST':
@@ -93,7 +95,7 @@ def handle_areas():
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error creating area: {e}")
+            logging.error(f"Error creating area: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/areas/<key>', methods=['PUT', 'PATCH', 'DELETE'])
@@ -142,7 +144,7 @@ def handle_area(key):
                     conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error updating area: {e}")
+            logging.error(f"Error updating area: {e}")
             return jsonify({"error": str(e)}), 500
     
     elif request.method == 'DELETE':
@@ -168,7 +170,7 @@ def handle_area(key):
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error deleting area: {e}")
+            logging.error(f"Error deleting area: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/objectives', methods=['GET', 'POST'])
@@ -180,7 +182,7 @@ def handle_objectives():
                 result = [dict(objective) for objective in objectives]
                 return jsonify(result)
         except Exception as e:
-            print(f"Error getting objectives: {e}")
+            logging.error(f"Error getting objectives: {e}")
             return jsonify({"error": str(e)}), 500
     
     if request.method == 'POST':
@@ -204,7 +206,7 @@ def handle_objectives():
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error creating objective: {e}")
+            logging.error(f"Error creating objective: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/objectives/<key>', methods=['PUT', 'PATCH', 'DELETE'])
@@ -303,7 +305,7 @@ def handle_objective(key):
                     return jsonify(dict(updated))
                 return jsonify({"error": "No updates provided"}), 400
         except Exception as e:
-            print(f"Error patching objective: {e}")
+            logging.error(f"Error patching objective: {e}")
             return jsonify({"error": str(e)}), 500
     
     elif request.method == 'DELETE':
@@ -322,7 +324,7 @@ def handle_objective(key):
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error deleting objective: {e}")
+            logging.error(f"Error deleting objective: {e}")
             return jsonify({"error": str(e)}), 500
 @app.route('/api/tasks', methods=['GET', 'POST'])
 def handle_tasks():
@@ -338,7 +340,7 @@ def handle_tasks():
                 result = [dict(task) for task in tasks]
                 return jsonify(result)
         except Exception as e:
-            print(f"Error getting tasks:", e)
+            logging.error(f"Error getting tasks: {e}")
             return jsonify({"error": str(e)}), 500
     
     if request.method == 'POST':
@@ -401,7 +403,7 @@ def handle_tasks():
                 conn.commit()
                 return jsonify(dict(result))
         except Exception as e:
-            print(f"Error creating task:", e)
+            logging.error(f"Error creating task: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/tasks/<key>', methods=['PUT', 'PATCH', 'DELETE'])
@@ -433,7 +435,7 @@ def handle_task(key):
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error deleting task: {e}")
+            logging.error(f"Error deleting task: {e}")
             return jsonify({"error": str(e)}), 500
 
     if request.method in ['PUT', 'PATCH']:
@@ -598,7 +600,7 @@ def handle_task(key):
                 return jsonify(updated_task)
                 
         except Exception as e:
-            print(f"Error updating task: {e}")
+            logging.error(f"Error updating task: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/undo', methods=['POST'])
@@ -682,7 +684,7 @@ def undo_last_action():
 
             return jsonify({'status': 'success'})
     except Exception as e:
-        print(f"Error during undo:", e)
+        logging.error(f"Error during undo: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
