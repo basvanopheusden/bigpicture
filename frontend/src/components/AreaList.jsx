@@ -9,6 +9,7 @@ const AreaList = ({
   objectives,
   tasks,
   collapsedAreas,
+  collapsedObjectives,
   editingArea,
   editingObjective,
   editingTask,
@@ -16,6 +17,7 @@ const AreaList = ({
   editInputBottomRef,
   handleAreaClick,
   toggleAreaCollapse,
+  toggleObjectiveCollapse,
   handleAreaChange,
   handleAreaBlur,
   handleAreaKeyPress,
@@ -119,6 +121,12 @@ const AreaList = ({
                                       className="group flex items-center"
                                       onClick={(e) => handleObjectiveClick(objective, e)}
                                     >
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); toggleObjectiveCollapse(objective.key); }}
+                                        className="mr-2"
+                                      >
+                                        {collapsedObjectives.has(objective.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
+                                      </button>
                                       <div className="flex-grow flex items-center">
                                         {editingObjective?.key === objective.key ? (
                                           <input
@@ -150,24 +158,26 @@ const AreaList = ({
                                         )}
                                       </div>
                                     </div>
-                                    <TaskList
-                                      tasks={tasks
-                                        .filter(task => task.objective_key === objective.key)
-                                        .sort((a, b) => a.order_index - b.order_index)}
-                                      parentId={objective.key}
-                                      parentType="objective"
-                                      editingTask={editingTask}
-                                      editInputBottomRef={editInputBottomRef}
-                                      handleTaskClick={handleTaskClick}
-                                      handleCompleteTask={handleCompleteTask}
-                                      handleDeleteTask={handleDeleteTask}
-                                      handleSecondaryTask={handleSecondaryTask}
-                                      handleTaskChange={handleTaskChange}
-                                      handleTaskBlur={handleTaskBlur}
-                                      handleTaskKeyPress={handleTaskKeyPress}
-                                      handleAddTask={handleAddTask}
-                                      className="pl-4 space-y-1 mt-1 mb-4"
-                                    />
+                                    {!collapsedObjectives.has(objective.key) && (
+                                      <TaskList
+                                        tasks={tasks
+                                          .filter(task => task.objective_key === objective.key)
+                                          .sort((a, b) => a.order_index - b.order_index)}
+                                        parentId={objective.key}
+                                        parentType="objective"
+                                        editingTask={editingTask}
+                                        editInputBottomRef={editInputBottomRef}
+                                        handleTaskClick={handleTaskClick}
+                                        handleCompleteTask={handleCompleteTask}
+                                        handleDeleteTask={handleDeleteTask}
+                                        handleSecondaryTask={handleSecondaryTask}
+                                        handleTaskChange={handleTaskChange}
+                                        handleTaskBlur={handleTaskBlur}
+                                        handleTaskKeyPress={handleTaskKeyPress}
+                                        handleAddTask={handleAddTask}
+                                        className="pl-4 space-y-1 mt-1 mb-4"
+                                      />
+                                    )}
                                   </div>
                                 )}
                               </Draggable>
