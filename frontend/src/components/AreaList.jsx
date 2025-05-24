@@ -2,6 +2,7 @@ import React from 'react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { ChevronDownIcon, ChevronRightIcon, Cross2Icon, PlusIcon, CheckIcon } from '@radix-ui/react-icons';
 import ReactMarkdown from 'react-markdown';
+import TaskList from './TaskList';
 
 const AreaList = ({
   areas,
@@ -23,7 +24,18 @@ const AreaList = ({
   handleObjectiveKeyPress,
   handleCompleteObjective,
   handleDeleteObjective,
-  handleAddObjective
+  handleAddObjective,
+  tasks,
+  editingTask,
+  editInputBottomRef,
+  handleTaskClick,
+  handleCompleteTask,
+  handleDeleteTask,
+  handleSecondaryTask,
+  handleTaskChange,
+  handleTaskBlur,
+  handleTaskKeyPress,
+  handleAddTask
 }) => (
   <div className="flex-1 border-b p-4 sm:p-8 mx-2 sm:mx-32 max-w-[1200px] sm:max-w-none mt-4">
     <Droppable droppableId="areas-list-top" type="area">
@@ -90,24 +102,22 @@ const AreaList = ({
                             .filter(obj => obj.area_key === area.key)
                             .sort((a, b) => a.order_index - b.order_index)
                             .map((objective, index) => (
-                              <Draggable
-                                key={objective.key}
-                                draggableId={objective.key}
-                                index={index}
-                              >
+                              <Draggable key={objective.key} draggableId={objective.key} index={index}>
                                 {(provided, snapshot) => (
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className={`group flex items-center ${snapshot.isDragging ? 'opacity-50' : ''}`}
-                                    onClick={(e) => handleObjectiveClick(objective, e)}
                                   >
-                                    <div className="flex-grow flex items-center">
-                                      {editingObjective?.key === objective.key ? (
-                                        <input
-                                          ref={editInputRef}
-                                          value={editingObjective.text}
+                                    <div
+                                      className={`group flex items-center ${snapshot.isDragging ? 'opacity-50' : ''}`}
+                                      onClick={(e) => handleObjectiveClick(objective, e)}
+                                    >
+                                      <div className="flex-grow flex items-center">
+                                        {editingObjective?.key === objective.key ? (
+                                          <input
+                                            ref={editInputRef}
+                                            value={editingObjective.text}
                                           onChange={handleObjectiveChange}
                                           onBlur={handleObjectiveBlur}
                                           onKeyDown={handleObjectiveKeyPress}
@@ -134,7 +144,26 @@ const AreaList = ({
                                       )}
                                     </div>
                                   </div>
-                                )}
+                                  <TaskList
+                                    tasks={tasks
+                                      .filter(task => task.objective_key === objective.key)
+                                      .sort((a, b) => a.order_index - b.order_index)}
+                                    parentId={objective.key}
+                                    parentType="objective"
+                                    editingTask={editingTask}
+                                    editInputBottomRef={editInputBottomRef}
+                                    handleTaskClick={handleTaskClick}
+                                    handleCompleteTask={handleCompleteTask}
+                                    handleDeleteTask={handleDeleteTask}
+                                    handleSecondaryTask={handleSecondaryTask}
+                                    handleTaskChange={handleTaskChange}
+                                    handleTaskBlur={handleTaskBlur}
+                                    handleTaskKeyPress={handleTaskKeyPress}
+                                    handleAddTask={handleAddTask}
+                                    className="pl-4 space-y-1 mt-1 mb-4"
+                                  />
+                                </div>
+                              )}
                               </Draggable>
                             ))}
                           {provided.placeholder}

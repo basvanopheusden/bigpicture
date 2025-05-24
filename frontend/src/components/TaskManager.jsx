@@ -637,6 +637,17 @@ return (
         handleCompleteObjective={handleCompleteObjective}
         handleDeleteObjective={handleDeleteObjective}
         handleAddObjective={handleAddObjective}
+        tasks={tasks}
+        editingTask={editingTask}
+        editInputBottomRef={editInputBottomRef}
+        handleTaskClick={handleTaskClick}
+        handleCompleteTask={handleCompleteTask}
+        handleDeleteTask={handleDeleteTask}
+        handleSecondaryTask={handleSecondaryTask}
+        handleTaskChange={handleTaskChange}
+        handleTaskBlur={handleTaskBlur}
+        handleTaskKeyPress={handleTaskKeyPress}
+        handleAddTask={handleAddTask}
       />
 
       <div className="flex-1 p-4 sm:p-8 mx-2 sm:mx-32 max-w-[1200px] sm:max-w-none">
