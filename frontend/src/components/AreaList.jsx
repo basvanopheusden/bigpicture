@@ -207,12 +207,6 @@ const AreaList = ({
             </Draggable>
           ))}
           {provided.placeholder}
-          <div className="mt-4 group flex items-center">
-            <PlusIcon
-              className="cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-              onClick={handleAddArea}
-            />
-          </div>
         </div>
       )}
     </Droppable>
