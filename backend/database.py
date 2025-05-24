@@ -85,6 +85,8 @@ def get_db():
     print(f"Attempting to connect to DB at: {DB_PATH}")
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    # enable foreign key constraints for cascading deletes
+    conn.execute('PRAGMA foreign_keys = ON')
     return conn
 
 
