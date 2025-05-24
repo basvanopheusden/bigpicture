@@ -154,8 +154,8 @@ const handleAreaClick = (area, event, isBottom = false) => {
         text: ''
       };
       await apiWrapper.post('/api/areas', newArea);
-      await refreshAll();
       setEditingArea(newArea);
+      await refreshAll();
     } catch (error) {
       console.error('Failed to create area:', error);
     }
@@ -219,8 +219,8 @@ const handleAreaClick = (area, event, isBottom = false) => {
         text: ''
       };
       await apiWrapper.post('/api/objectives', newObjective);
-      await refreshAll();
       setEditingObjective(newObjective);
+      await refreshAll();
     } catch (error) {
       console.error('Failed to create objective:', error);
     }
@@ -285,13 +285,13 @@ const handleTaskClick = (task, event) => {
       const newTask = {
         key: uuidv4(),
         text: '',
-        ...(parentType === 'area' 
-          ? { area_key: parentKey } 
+        ...(parentType === 'area'
+          ? { area_key: parentKey }
           : { objective_key: parentKey })
       };
       await apiWrapper.post('/api/tasks', newTask);
-      await refreshAll();
       setEditingTask(newTask);
+      await refreshAll();
     } catch (error) {
       console.error('Failed to create task:', error);
     }
