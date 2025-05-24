@@ -205,5 +205,22 @@ class APITestCase(unittest.TestCase):
         area = self.client.get('/api/areas').get_json()[0]
         self.assertEqual(area['text'], 'Area 1')
 
+    def test_cors_headers_allowed_origin(self):
+        resp = self.client.get('/api/test', headers={'Origin': 'http://localhost:5173'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get('Access-Control-Allow-Origin'), 'http://localhost:5173')
+        self.assertEqual(resp.headers.get('Access-Control-Allow-Credentials'), 'true')
+
+        resp = self.client.open('/api/test', method='OPTIONS', headers={
+            'Origin': 'http://localhost:5173',
+            'Access-Control-Request-Method': 'GET',
+            'Access-Control-Request-Headers': 'Content-Type'
+        })
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get('Access-Control-Allow-Origin'), 'http://localhost:5173')
+        allow_headers = resp.headers.get('Access-Control-Allow-Headers')
+        self.assertIsNotNone(allow_headers)
+        self.assertIn('Content-Type', allow_headers)
+
 if __name__ == '__main__':
     unittest.main()
