@@ -11,7 +11,7 @@ function resolve(relPath) {
   return path.join(__dirname, '..', relPath);
 }
 
-test('TaskManager supports collapsing areas', () => {
+test('TaskManager supports collapsing areas and objectives', () => {
   const files = [
     'src/components/TaskManager.jsx',
     'src/components/AreaList.jsx'
@@ -22,4 +22,7 @@ test('TaskManager supports collapsing areas', () => {
   assert.match(src, /new Set/);
   assert.match(src, /toggleAreaCollapse/);
   assert.match(src, /collapsedAreas\.has\(area.key\)/);
+  assert.match(src, /collapsedObjectives/);
+  assert.match(src, /toggleObjectiveCollapse/);
+  assert.match(src, /collapsedObjectives\.has\(objective.key\)/);
 });

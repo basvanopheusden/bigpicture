@@ -21,6 +21,10 @@ const TaskManager = () => {
       const stored = localStorage.getItem('collapsedAreas');
       return new Set(stored ? JSON.parse(stored) : []);
     });
+    const [collapsedObjectives, setCollapsedObjectives] = useState(() => {
+      const stored = localStorage.getItem('collapsedObjectives');
+      return new Set(stored ? JSON.parse(stored) : []);
+    });
     const editInputRef = useRef(null);
     const editInputBottomRef = useRef(null);
 
@@ -58,6 +62,10 @@ const TaskManager = () => {
     useEffect(() => {
       localStorage.setItem('collapsedAreas', JSON.stringify([...collapsedAreas]));
     }, [collapsedAreas]);
+
+    useEffect(() => {
+      localStorage.setItem('collapsedObjectives', JSON.stringify([...collapsedObjectives]));
+    }, [collapsedObjectives]);
   
     const refreshAll = async () => {
       try {
@@ -186,6 +194,18 @@ const handleAreaClick = (area, event, isBottom = false) => {
 
   const toggleAreaCollapse = (key) => {
     setCollapsedAreas(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const toggleObjectiveCollapse = (key) => {
+    setCollapsedObjectives(prev => {
       const next = new Set(prev);
       if (next.has(key)) {
         next.delete(key);
@@ -647,6 +667,7 @@ return (
         objectives={objectives}
         tasks={tasks}
         collapsedAreas={collapsedAreas}
+        collapsedObjectives={collapsedObjectives}
         editingArea={editingArea}
         editingObjective={editingObjective}
         editingTask={editingTask}
@@ -654,6 +675,7 @@ return (
         editInputBottomRef={editInputBottomRef}
         handleAreaClick={handleAreaClick}
         toggleAreaCollapse={toggleAreaCollapse}
+        toggleObjectiveCollapse={toggleObjectiveCollapse}
         handleAreaChange={handleAreaChange}
         handleAreaBlur={handleAreaBlur}
         handleAreaKeyPress={handleAreaKeyPress}
