@@ -489,10 +489,16 @@ const handleTaskChange = (e) => {
   });
 };
 
-  const handleAreaKeyPress = (e) => {
+  const handleAreaKeyPress = async (e) => {
     setLastKeyDown(e.key);
     if (e.key === 'Enter') {
-      editInputRef.current?.blur();
+      e.preventDefault();
+      if (!editingArea.text.trim()) {
+        await handleDeleteArea(editingArea.key, new Event('dummy'));
+        setEditingArea(null);
+      } else {
+        editInputRef.current?.blur();
+      }
     }
   };
 
@@ -506,13 +512,18 @@ const handleTaskChange = (e) => {
     }
     if (e.key === 'Enter') {
       e.preventDefault();
+      if (!editingObjective.text.trim()) {
+        await handleDeleteObjective(editingObjective.key, new Event('dummy'));
+        setEditingObjective(null);
+        return;
+      }
       const currentObjective = editingObjective;
-      
+
       try {
         await apiWrapper.patch(`/api/objectives/${currentObjective.key}`, {
           text: currentObjective.text
         });
-        
+
         const newObjective = {
           key: uuidv4(),
           area_key: currentObjective.area_key,
@@ -538,18 +549,23 @@ const handleTaskChange = (e) => {
     }
     if (e.key === 'Enter') {
       e.preventDefault();
+      if (!editingTask.text.trim()) {
+        await handleDeleteTask(editingTask.key, new Event('dummy'));
+        setEditingTask(null);
+        return;
+      }
       const currentTask = editingTask;
-      
+
       try {
         await apiWrapper.patch(`/api/tasks/${currentTask.key}`, {
           text: currentTask.text
         });
-        
+
         const newTask = {
           key: uuidv4(),
           text: ''
         };
-        
+
         if (currentTask.area_key) {
           newTask.area_key = currentTask.area_key;
         } else if (currentTask.objective_key) {
