@@ -165,8 +165,8 @@ class APITestCase(unittest.TestCase):
         resp = self.client.post('/api/tasks', json={"key": "t1", "text": "Task", "objective_key": "obj1"})
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
-        self.assertEqual(data['status'], 'complete')
-        self.assertEqual(data['date_time_completed'], "2021-01-01T00:00:00")
+        self.assertEqual(data['status'], 'open')
+        self.assertIsNone(data['date_time_completed'])
 
     def test_create_task_missing_parent(self):
         self.client.post('/api/areas', json={"key": "area1", "text": "Area 1"})

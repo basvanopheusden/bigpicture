@@ -265,14 +265,6 @@ def handle_objective(key):
                     if data['status'] == 'complete':
                         updates.append('date_time_completed = ?')
                         values.append(get_pacific_time())
-                        
-                        # Also complete all child tasks
-                        conn.execute('''
-                            UPDATE tasks 
-                            SET status = 'complete', 
-                                date_time_completed = ? 
-                            WHERE objective_key = ? AND status != 'complete'
-                        ''', (get_pacific_time(), key))
                     else:
                         updates.append('date_time_completed = ?')
                         values.append(None)
@@ -351,17 +343,9 @@ def handle_tasks():
                 if (area_key is None) == (objective_key is None):  # XNOR check
                     return jsonify({"error": "Exactly one of area_key or objective_key must be specified"}), 400
 
-                # If parent is objective, check if objective is complete
-                if objective_key is not None:
-                    objective = conn.execute(
-                        'SELECT status FROM objectives WHERE key = ?', 
-                        (objective_key,)
-                    ).fetchone()
-                    initial_status = 'complete' if objective and objective['status'] == 'complete' else 'open'
-                    initial_completed = get_pacific_time() if initial_status == 'complete' else None
-                else:
-                    initial_status = 'open'
-                    initial_completed = None
+                # New tasks should start open regardless of parent status
+                initial_status = "open"
+                initial_completed = None
 
                 # Get max order_index for the parent (area or objective)
                 parent_key = data.get('area_key') or data.get('objective_key')
