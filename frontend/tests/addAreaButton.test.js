@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+function resolve(relPath) {
+  return path.join(__dirname, '..', relPath);
+}
+
+const src = readFileSync(resolve('src/components/AreaList.jsx'), 'utf8');
+
+test('shows add area button when list is empty', () => {
+  assert.match(src, /areas\.length === 0/);
+  assert.match(src, /<PlusIcon[^>]*onClick={handleAddArea}/);
+});
