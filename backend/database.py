@@ -7,7 +7,6 @@ import pytz
 
 # Determine where the SQLite database should live. This mirrors the old logic in app.py
 DB_PATH = os.environ.get('DATABASE_URL', 'tasks.db')
-logging.basicConfig(level=logging.INFO)
 
 
 def get_pacific_time():

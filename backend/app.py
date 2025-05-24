@@ -1,6 +1,7 @@
 """Flask application entry point."""
 import os
 import logging
+logging.basicConfig(level=logging.INFO)
 from flask import Flask, jsonify
 from flask_cors import CORS
 
@@ -14,7 +15,6 @@ except ImportError:  # pragma: no cover - executed only when run as script
     from routes import areas, objectives, tasks, undo
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.INFO)
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(
