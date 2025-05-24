@@ -45,20 +45,6 @@ CORS(app,
 with app.app_context():
     init_db()
 
-
-@app.after_request
-def after_request(response):
-    origin = request.headers.get('Origin')
-    if origin in [
-        "http://localhost:5173",
-        "https://bigpicture-frontend-ancient-night-2172.fly.dev"
-    ]:
-        response.headers.add('Access-Control-Allow-Origin', origin)
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
-
 @app.route('/api/test', methods=['GET'])
 def test():
     return jsonify({"status": "ok", "message": "API is working"})
