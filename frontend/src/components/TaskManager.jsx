@@ -147,8 +147,21 @@ const handleAreaClick = (area, event, isBottom = false) => {
     }
   };
 
+  const finalizeEditing = async () => {
+    if (editingArea) {
+      await handleAreaBlur();
+    }
+    if (editingObjective) {
+      await handleObjectiveBlur();
+    }
+    if (editingTask) {
+      await handleTaskBlur(editingTask);
+    }
+  };
+
   const handleAddArea = async () => {
     try {
+      await finalizeEditing();
       const newArea = {
         key: uuidv4(),
         text: ''
@@ -213,6 +226,7 @@ const handleAreaClick = (area, event, isBottom = false) => {
 
   const handleAddObjective = async (areaKey) => {
     try {
+      await finalizeEditing();
       const newObjective = {
         key: uuidv4(),
         area_key: areaKey,
@@ -282,6 +296,7 @@ const handleTaskClick = (task, event) => {
 
   const handleAddTask = async (parentKey, parentType = 'area') => {
     try {
+      await finalizeEditing();
       const newTask = {
         key: uuidv4(),
         text: '',
