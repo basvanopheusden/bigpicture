@@ -206,6 +206,14 @@ const AreaList = ({
               )}
             </Draggable>
           ))}
+          {areas.length === 0 && (
+            <div className="flex justify-center">
+              <PlusIcon
+                className="cursor-pointer text-gray-400 hover:text-black add-button h-4 w-4"
+                onClick={handleAddArea}
+              />
+            </div>
+          )}
           {provided.placeholder}
         </div>
       )}
