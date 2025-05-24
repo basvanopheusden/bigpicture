@@ -67,10 +67,12 @@ class APITestCase(unittest.TestCase):
             conn.execute('PRAGMA foreign_keys = ON')
             return conn
         app.get_db = get_test_db
+        app.app.get_db = get_test_db
 
         # patch timestamp function for determinism
         self.original_get_pacific_time = app.get_pacific_time
         app.get_pacific_time = lambda: "2021-01-01T00:00:00"
+        app.app.get_pacific_time = app.get_pacific_time
 
         self.client = app.app.test_client()
 
@@ -78,6 +80,7 @@ class APITestCase(unittest.TestCase):
         os.close(self.db_fd)
         os.unlink(self.db_path)
         app.get_pacific_time = self.original_get_pacific_time
+        app.app.get_pacific_time = app.get_pacific_time
 
     def test_test_endpoint(self):
         resp = self.client.get('/api/test')

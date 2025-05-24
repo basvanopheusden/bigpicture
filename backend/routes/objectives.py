@@ -1,13 +1,13 @@
 """Objective-related API routes."""
 import logging
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 
 bp = Blueprint('objectives', __name__)
 
 @bp.route('/api/objectives', methods=['GET', 'POST'])
 def handle_objectives():
     """List or create objectives."""
-    from .. import app as app_module
+    app_module = current_app
     if request.method == 'GET':
         try:
             with app_module.get_db() as conn:
@@ -43,7 +43,7 @@ def handle_objectives():
 @bp.route('/api/objectives/<key>', methods=['PUT', 'PATCH', 'DELETE'])
 def handle_objective(key):
     """Update or delete a single objective."""
-    from .. import app as app_module
+    app_module = current_app
     if request.method in ['PUT', 'PATCH']:
         try:
             data = request.json

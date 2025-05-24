@@ -1,13 +1,13 @@
 """Area-related API routes."""
 import logging
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 
 bp = Blueprint('areas', __name__)
 
 @bp.route('/api/areas', methods=['GET', 'POST'])
 def handle_areas():
     """List or create areas."""
-    from .. import app as app_module
+    app_module = current_app
     if request.method == 'GET':
         try:
             with app_module.get_db() as conn:
@@ -40,7 +40,7 @@ def handle_areas():
 @bp.route('/api/areas/<key>', methods=['PUT', 'PATCH', 'DELETE'])
 def handle_area(key):
     """Update or delete a single area."""
-    from .. import app as app_module
+    app_module = current_app
     if request.method in ['PUT', 'PATCH']:
         try:
             data = request.json
