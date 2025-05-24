@@ -1,13 +1,13 @@
 """Task-related API routes."""
 import logging
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 
 bp = Blueprint('tasks', __name__)
 
 @bp.route('/api/tasks', methods=['GET', 'POST'])
 def handle_tasks():
     """List or create tasks."""
-    from .. import app as app_module
+    app_module = current_app
     if request.method == 'GET':
         try:
             with app_module.get_db() as conn:
@@ -66,7 +66,7 @@ def handle_tasks():
 @bp.route('/api/tasks/<key>', methods=['PUT', 'PATCH', 'DELETE'])
 def handle_task(key):
     """Update or delete a single task."""
-    from .. import app as app_module
+    app_module = current_app
     if request.method == 'DELETE':
         try:
             with app_module.get_db() as conn:

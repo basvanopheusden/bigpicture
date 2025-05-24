@@ -1,14 +1,14 @@
 """Undo API route."""
 import json
 import logging
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app
 
 bp = Blueprint('undo', __name__)
 
 @bp.route('/api/undo', methods=['POST'])
 def undo_last_action():
     """Undo the most recent logged action."""
-    from .. import app as app_module
+    app_module = current_app
     try:
         with app_module.get_db() as conn:
             last_action = conn.execute(
