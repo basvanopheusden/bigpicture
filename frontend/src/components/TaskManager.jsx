@@ -13,7 +13,6 @@ const TaskManager = () => {
     const [objectives, setObjectives] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [editingArea, setEditingArea] = useState(null);
-    const [editingAreaBottom, setEditingAreaBottom] = useState(null);
     const [editingObjective, setEditingObjective] = useState(null);
     const [editingTask, setEditingTask] = useState(null);
     const [lastKeyDown, setLastKeyDown] = useState(null);
@@ -43,11 +42,6 @@ const TaskManager = () => {
       }
     }, [editingArea, editingObjective]);
   
-    useEffect(() => {
-      if (editingAreaBottom || editingTask) {
-        editInputBottomRef.current?.focus();
-      }
-    }, [editingAreaBottom, editingTask]);
   
     useEffect(() => {
       const handleKeyDown = (e) => {
@@ -263,7 +257,6 @@ const handleTaskClick = (task, event) => {
     area_key: task.area_key,
     objective_key: task.objective_key
   });
-  setEditingAreaBottom(null);
 };
 
   const handleTaskBlur = async (task) => {
