@@ -180,6 +180,11 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertIn('Exactly one of area_key or objective_key', resp.get_json()['error'])
 
+    def test_invalid_json(self):
+        resp = self.client.post('/api/areas', data='{', headers={'Content-Type': 'application/json'})
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('Invalid JSON', resp.get_json()['error'])
+
     def test_undo_without_actions(self):
         resp = self.client.post('/api/undo')
         self.assertEqual(resp.status_code, 404)
