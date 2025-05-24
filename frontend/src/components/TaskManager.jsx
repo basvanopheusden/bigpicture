@@ -56,6 +56,17 @@ const TaskManager = () => {
     }, []);
 
     useEffect(() => {
+      const handlePageClick = (e) => {
+        if (!e.target.closest('input')) {
+          finalizeEditing();
+        }
+      };
+
+      window.addEventListener('click', handlePageClick);
+      return () => window.removeEventListener('click', handlePageClick);
+    }, [editingArea, editingObjective, editingTask]);
+
+    useEffect(() => {
       localStorage.setItem('collapsedAreas', JSON.stringify([...collapsedAreas]));
     }, [collapsedAreas]);
   
@@ -97,6 +108,7 @@ const TaskManager = () => {
   
     const handleUndo = async () => {
       try {
+        await finalizeEditing();
         await apiWrapper.post('/api/undo');
         await refreshAll();
       } catch (error) {
@@ -120,10 +132,11 @@ const TaskManager = () => {
       setAuthenticated(false);
     };
 // Area handlers
-const handleAreaClick = (area, event, isBottom = false) => {
+const handleAreaClick = async (area, event, isBottom = false) => {
     if (event.target.closest('.delete-button') || event.target.closest('.add-button')) return;
     if (isBottom) return;
-    
+
+    await finalizeEditing();
     setEditingArea({ ...area });
     setEditingObjective(null);
   };
@@ -197,10 +210,11 @@ const handleAreaClick = (area, event, isBottom = false) => {
   };
 
   // Objective handlers
-  const handleObjectiveClick = (objective, event, isBottom = false) => {
+  const handleObjectiveClick = async (objective, event, isBottom = false) => {
     if (event.target.closest('.delete-button') || event.target.closest('.add-button')) return;
     if (isBottom) return;
-    
+
+    await finalizeEditing();
     setEditingObjective({ ...objective });
     setEditingArea(null);
   };
@@ -263,8 +277,9 @@ const handleAreaClick = (area, event, isBottom = false) => {
     }
   };
 // Task handlers
-const handleTaskClick = (task, event) => {
+const handleTaskClick = async (task, event) => {
   if (event.target.closest('.delete-button') || event.target.closest('.add-button')) return;
+  await finalizeEditing();
   setEditingTask({
     key: task.key,
     text: task.text || '',  // Explicitly set text
