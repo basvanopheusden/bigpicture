@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -26,6 +27,7 @@ except ImportError:  # pragma: no cover - executed only when run as script
     from utils import parse_json
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(app,
@@ -45,20 +47,6 @@ CORS(app,
 with app.app_context():
     init_db()
 
-
-@app.after_request
-def after_request(response):
-    origin = request.headers.get('Origin')
-    if origin in [
-        "http://localhost:5173",
-        "https://bigpicture-frontend-ancient-night-2172.fly.dev"
-    ]:
-        response.headers.add('Access-Control-Allow-Origin', origin)
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
-
 @app.route('/api/test', methods=['GET'])
 def test():
     return jsonify({"status": "ok", "message": "API is working"})
@@ -72,7 +60,7 @@ def handle_areas():
                 result = [dict(area) for area in areas]
                 return jsonify(result)
         except Exception as e:
-            print(f"Error getting areas: {e}")
+            logging.error(f"Error getting areas: {e}")
             return jsonify({"error": str(e)}), 500
     
     if request.method == 'POST':
@@ -84,7 +72,7 @@ def handle_areas():
             with get_db() as conn:
                 # Get max order_index
                 max_order = conn.execute('SELECT MAX(order_index) FROM areas').fetchone()[0]
-                next_order = (max_order or -1) + 1
+                next_order = (max_order if max_order is not None else -1) + 1
                 
                 conn.execute(
                     'INSERT INTO areas (key, text, date_time_created, order_index) VALUES (?, ?, ?, ?)',
@@ -93,7 +81,7 @@ def handle_areas():
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error creating area: {e}")
+            logging.error(f"Error creating area: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/areas/<key>', methods=['PUT', 'PATCH', 'DELETE'])
@@ -142,7 +130,7 @@ def handle_area(key):
                     conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error updating area: {e}")
+            logging.error(f"Error updating area: {e}")
             return jsonify({"error": str(e)}), 500
     
     elif request.method == 'DELETE':
@@ -150,25 +138,26 @@ def handle_area(key):
             with get_db() as conn:
                 # Log current state of area and its children for undo
                 area = conn.execute('SELECT * FROM areas WHERE key = ?', (key,)).fetchone()
-                if area:
-                    log_action_for_undo(conn, 'DELETE', 'areas', key, dict(area))
-                    
+
                 objectives = conn.execute('SELECT * FROM objectives WHERE area_key = ?', (key,)).fetchall()
                 for obj in objectives:
-                    log_action_for_undo(conn, 'DELETE', 'objectives', obj['key'], dict(obj))
                     tasks = conn.execute('SELECT * FROM tasks WHERE objective_key = ?', (obj['key'],)).fetchall()
                     for task in tasks:
                         log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], dict(task))
+                    log_action_for_undo(conn, 'DELETE', 'objectives', obj['key'], dict(obj))
 
                 area_tasks = conn.execute('SELECT * FROM tasks WHERE area_key = ?', (key,)).fetchall()
                 for task in area_tasks:
                     log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], dict(task))
 
+                if area:
+                    log_action_for_undo(conn, 'DELETE', 'areas', key, dict(area))
+
                 conn.execute('DELETE FROM areas WHERE key = ?', (key,))
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error deleting area: {e}")
+            logging.error(f"Error deleting area: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/objectives', methods=['GET', 'POST'])
@@ -180,7 +169,7 @@ def handle_objectives():
                 result = [dict(objective) for objective in objectives]
                 return jsonify(result)
         except Exception as e:
-            print(f"Error getting objectives: {e}")
+            logging.error(f"Error getting objectives: {e}")
             return jsonify({"error": str(e)}), 500
     
     if request.method == 'POST':
@@ -195,7 +184,7 @@ def handle_objectives():
                     'SELECT MAX(order_index) FROM objectives WHERE area_key = ?',
                     (data['area_key'],)
                 ).fetchone()[0]
-                next_order = (max_order or -1) + 1
+                next_order = (max_order if max_order is not None else -1) + 1
                 
                 conn.execute(
                     'INSERT INTO objectives (key, area_key, text, date_time_created, status, order_index) VALUES (?, ?, ?, ?, ?, ?)',
@@ -204,7 +193,7 @@ def handle_objectives():
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error creating objective: {e}")
+            logging.error(f"Error creating objective: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/objectives/<key>', methods=['PUT', 'PATCH', 'DELETE'])
@@ -303,7 +292,7 @@ def handle_objective(key):
                     return jsonify(dict(updated))
                 return jsonify({"error": "No updates provided"}), 400
         except Exception as e:
-            print(f"Error patching objective: {e}")
+            logging.error(f"Error patching objective: {e}")
             return jsonify({"error": str(e)}), 500
     
     elif request.method == 'DELETE':
@@ -312,17 +301,17 @@ def handle_objective(key):
                 # Log current state for undo
                 objective = conn.execute('SELECT * FROM objectives WHERE key = ?', (key,)).fetchone()
                 if objective:
-                    log_action_for_undo(conn, 'DELETE', 'objectives', key, dict(objective))
-                    # Log child tasks
+                    # Log child tasks before the objective so undo restores in correct order
                     tasks = conn.execute('SELECT * FROM tasks WHERE objective_key = ?', (key,)).fetchall()
                     for task in tasks:
                         log_action_for_undo(conn, 'DELETE', 'tasks', task['key'], dict(task))
+                    log_action_for_undo(conn, 'DELETE', 'objectives', key, dict(objective))
 
                 conn.execute('DELETE FROM objectives WHERE key = ?', (key,))
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error deleting objective: {e}")
+            logging.error(f"Error deleting objective: {e}")
             return jsonify({"error": str(e)}), 500
 @app.route('/api/tasks', methods=['GET', 'POST'])
 def handle_tasks():
@@ -338,7 +327,7 @@ def handle_tasks():
                 result = [dict(task) for task in tasks]
                 return jsonify(result)
         except Exception as e:
-            print("Error getting tasks:", e)
+            logging.error(f"Error getting tasks: {e}")
             return jsonify({"error": str(e)}), 500
     
     if request.method == 'POST':
@@ -381,7 +370,7 @@ def handle_tasks():
                     f'SELECT MAX(order_index) FROM tasks WHERE {parent_type} = ?',
                     (parent_key,)
                 ).fetchone()[0]
-                next_order = (max_order or -1) + 1
+                next_order = (max_order if max_order is not None else -1) + 1
                 
                 conn.execute(
                     '''INSERT INTO tasks (
@@ -401,7 +390,7 @@ def handle_tasks():
                 conn.commit()
                 return jsonify(dict(result))
         except Exception as e:
-            print("Error creating task:", e)
+            logging.error(f"Error creating task: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/tasks/<key>', methods=['PUT', 'PATCH', 'DELETE'])
@@ -433,7 +422,7 @@ def handle_task(key):
                 conn.commit()
                 return jsonify({'status': 'success'})
         except Exception as e:
-            print(f"Error deleting task: {e}")
+            logging.error(f"Error deleting task: {e}")
             return jsonify({"error": str(e)}), 500
 
     if request.method in ['PUT', 'PATCH']:
@@ -598,7 +587,7 @@ def handle_task(key):
                 return jsonify(updated_task)
                 
         except Exception as e:
-            print(f"Error updating task: {e}")
+            logging.error(f"Error updating task: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/undo', methods=['POST'])
@@ -622,13 +611,21 @@ def undo_last_action():
             if action_data['action_type'] == 'DELETE':
                 if action_data['table_name'] == 'areas':
                     conn.execute(
+                        'UPDATE areas SET order_index = order_index + 1 WHERE order_index >= ?',
+                        (old_data['order_index'],)
+                    )
+                    conn.execute(
                         'INSERT INTO areas (key, text, order_index, date_time_created) VALUES (?, ?, ?, ?)',
                         (old_data['key'], old_data['text'], old_data['order_index'], old_data['date_time_created'])
                     )
                 elif action_data['table_name'] == 'objectives':
+                    conn.execute(
+                        'UPDATE objectives SET order_index = order_index + 1 WHERE area_key = ? AND order_index >= ?',
+                        (old_data['area_key'], old_data['order_index'])
+                    )
                     conn.execute('''
                         INSERT INTO objectives (
-                            key, area_key, text, order_index, date_time_created, 
+                            key, area_key, text, order_index, date_time_created,
                             date_time_completed, status
                         ) VALUES (?, ?, ?, ?, ?, ?, ?)
                     ''', (
@@ -637,6 +634,12 @@ def undo_last_action():
                         old_data['date_time_completed'], old_data['status']
                     ))
                 elif action_data['table_name'] == 'tasks':
+                    parent_col = 'area_key' if old_data['area_key'] else 'objective_key'
+                    parent_key = old_data['area_key'] or old_data['objective_key']
+                    conn.execute(
+                        f'UPDATE tasks SET order_index = order_index + 1 WHERE {parent_col} = ? AND order_index >= ?',
+                        (parent_key, old_data['order_index'])
+                    )
                     conn.execute('''
                         INSERT INTO tasks (
                             key, area_key, objective_key, text, order_index,
@@ -682,7 +685,7 @@ def undo_last_action():
 
             return jsonify({'status': 'success'})
     except Exception as e:
-        print("Error during undo:", e)
+        logging.error(f"Error during undo: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

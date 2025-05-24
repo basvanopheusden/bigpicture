@@ -1,11 +1,13 @@
 import os
 import sqlite3
 import json
+import logging
 from datetime import datetime
 import pytz
 
 # Determine where the SQLite database should live. This mirrors the old logic in app.py
 DB_PATH = os.environ.get('DATABASE_URL', 'tasks.db')
+logging.basicConfig(level=logging.INFO)
 
 
 def get_pacific_time():
@@ -16,7 +18,7 @@ def get_pacific_time():
 
 def init_db():
     """Initialise the database and create tables if required."""
-    print(f"Initializing database at {DB_PATH}...")
+    logging.info(f"Initializing database at {DB_PATH}...")
     try:
         dir_name = os.path.dirname(DB_PATH)
         if dir_name:
@@ -74,17 +76,19 @@ def init_db():
                 )
             ''')
 
-            print("Database initialized successfully")
+            logging.info("Database initialized successfully")
     except sqlite3.Error as e:
-        print(f"Error initializing database: {e}")
+        logging.error(f"Error initializing database: {e}")
         raise
 
 
 def get_db():
     """Return a connection to the configured database."""
-    print(f"Attempting to connect to DB at: {DB_PATH}")
+    logging.info(f"Attempting to connect to DB at: {DB_PATH}")
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    # enable foreign key constraints for cascading deletes
+    conn.execute('PRAGMA foreign_keys = ON')
     return conn
 
 

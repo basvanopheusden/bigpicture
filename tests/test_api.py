@@ -64,6 +64,7 @@ class APITestCase(unittest.TestCase):
         def get_test_db():
             conn = sqlite3.connect(self.db_path)
             conn.row_factory = sqlite3.Row
+            conn.execute('PRAGMA foreign_keys = ON')
             return conn
         app.get_db = get_test_db
 
@@ -180,6 +181,11 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertIn('Exactly one of area_key or objective_key', resp.get_json()['error'])
 
+    def test_invalid_json(self):
+        resp = self.client.post('/api/areas', data='{', headers={'Content-Type': 'application/json'})
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('Invalid JSON', resp.get_json()['error'])
+
     def test_undo_without_actions(self):
         resp = self.client.post('/api/undo')
         self.assertEqual(resp.status_code, 404)
@@ -204,6 +210,77 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         area = self.client.get('/api/areas').get_json()[0]
         self.assertEqual(area['text'], 'Area 1')
+
+    def test_cors_headers_allowed_origin(self):
+        resp = self.client.get('/api/test', headers={'Origin': 'http://localhost:5173'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get('Access-Control-Allow-Origin'), 'http://localhost:5173')
+        self.assertEqual(resp.headers.get('Access-Control-Allow-Credentials'), 'true')
+
+        resp = self.client.open('/api/test', method='OPTIONS', headers={
+            'Origin': 'http://localhost:5173',
+            'Access-Control-Request-Method': 'GET',
+            'Access-Control-Request-Headers': 'Content-Type'
+        })
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get('Access-Control-Allow-Origin'), 'http://localhost:5173')
+        allow_headers = resp.headers.get('Access-Control-Allow-Headers')
+        self.assertIsNotNone(allow_headers)
+        self.assertIn('Content-Type', allow_headers)
+
+    def test_full_frontend_flow(self):
+        c = self.client
+        # create initial data like the frontend would
+        c.post('/api/areas', json={"key": "area1", "text": "Area 1"})
+        c.post('/api/objectives', json={"key": "o1", "area_key": "area1", "text": "Objective 1"})
+        c.post('/api/objectives', json={"key": "o2", "area_key": "area1", "text": "Objective 2"})
+        c.post('/api/tasks', json={"key": "t1", "text": "Task 1", "objective_key": "o1"})
+        c.post('/api/tasks', json={"key": "t2", "text": "Task 2", "objective_key": "o1"})
+
+        # verify structure
+        self.assertEqual([o['key'] for o in c.get('/api/objectives').get_json()], ['o1', 'o2'])
+        tasks = sorted([t for t in c.get('/api/tasks').get_json() if t['objective_key'] == 'o1'], key=lambda x: x['order_index'])
+        self.assertEqual([t['key'] for t in tasks], ['t1', 't2'])
+        self.assertEqual([t['order_index'] for t in tasks], [0, 1])
+
+        # delete a task (clicking x)
+        c.delete('/api/tasks/t1')
+        tasks = [t['key'] for t in c.get('/api/tasks').get_json() if t['objective_key'] == 'o1']
+        self.assertEqual(tasks, ['t2'])
+
+        # undo deletion
+        c.post('/api/undo')
+        tasks = sorted([t for t in c.get('/api/tasks').get_json() if t['objective_key'] == 'o1'], key=lambda x: x['order_index'])
+        self.assertEqual([t['key'] for t in tasks], ['t1', 't2'])
+        self.assertEqual([t['order_index'] for t in tasks], [0, 1])
+
+        # delete objective with children
+        c.delete('/api/objectives/o1')
+        self.assertEqual([o['key'] for o in c.get('/api/objectives').get_json()], ['o2'])
+        self.assertEqual([t for t in c.get('/api/tasks').get_json() if t['objective_key'] == 'o1'], [])
+
+        # undo objective deletion (needs 3 undos: two tasks then objective)
+        c.post('/api/undo')
+        c.post('/api/undo')
+        c.post('/api/undo')
+        self.assertEqual(sorted(o['key'] for o in c.get('/api/objectives').get_json()), ['o1', 'o2'])
+        tasks = sorted([t for t in c.get('/api/tasks').get_json() if t['objective_key'] == 'o1'], key=lambda x: x['order_index'])
+        self.assertEqual([t['key'] for t in tasks], ['t1', 't2'])
+
+        # delete entire area
+        c.delete('/api/areas/area1')
+        self.assertEqual(c.get('/api/areas').get_json(), [])
+        self.assertEqual(c.get('/api/objectives').get_json(), [])
+        self.assertEqual(c.get('/api/tasks').get_json(), [])
+
+        # undo area deletion (area + 2 objectives + 2 tasks = 5 undos)
+        for _ in range(5):
+            c.post('/api/undo')
+
+        self.assertEqual([a['key'] for a in c.get('/api/areas').get_json()], ['area1'])
+        self.assertEqual(sorted(o['key'] for o in c.get('/api/objectives').get_json()), ['o1', 'o2'])
+        all_tasks = sorted(c.get('/api/tasks').get_json(), key=lambda x: (x['objective_key'], x['order_index']))
+        self.assertEqual([t['key'] for t in all_tasks], ['t1', 't2'])
 
 if __name__ == '__main__':
     unittest.main()
