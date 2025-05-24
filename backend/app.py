@@ -338,7 +338,7 @@ def handle_tasks():
                 result = [dict(task) for task in tasks]
                 return jsonify(result)
         except Exception as e:
-            print(f"Error getting tasks:", e)
+            print("Error getting tasks:", e)
             return jsonify({"error": str(e)}), 500
     
     if request.method == 'POST':
@@ -401,7 +401,7 @@ def handle_tasks():
                 conn.commit()
                 return jsonify(dict(result))
         except Exception as e:
-            print(f"Error creating task:", e)
+            print("Error creating task:", e)
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/tasks/<key>', methods=['PUT', 'PATCH', 'DELETE'])
@@ -682,7 +682,7 @@ def undo_last_action():
 
             return jsonify({'status': 'success'})
     except Exception as e:
-        print(f"Error during undo:", e)
+        print("Error during undo:", e)
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
