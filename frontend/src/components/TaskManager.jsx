@@ -116,6 +116,15 @@ const TaskManager = () => {
   
     const handleUndo = async () => {
       try {
+        if (editingArea && !editingArea.text.trim()) {
+          setEditingArea(null);
+        }
+        if (editingObjective && !editingObjective.text.trim()) {
+          setEditingObjective(null);
+        }
+        if (editingTask && !editingTask.text.trim()) {
+          setEditingTask(null);
+        }
         await finalizeEditing();
         await apiWrapper.post('/api/undo');
         await refreshAll();
