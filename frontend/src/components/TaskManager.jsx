@@ -389,8 +389,13 @@ const handleTaskClick = (task, event) => {
         });
       }
       else if (type === 'task') {
-        const [destParentId, destType] = destination.droppableId.split('-');
-        const [sourceParentId, sourceType] = source.droppableId.split('-');
+        const lastDestDash = destination.droppableId.lastIndexOf('-');
+        const destParentId = destination.droppableId.slice(0, lastDestDash);
+        const destType = destination.droppableId.slice(lastDestDash + 1);
+
+        const lastSourceDash = source.droppableId.lastIndexOf('-');
+        const sourceParentId = source.droppableId.slice(0, lastSourceDash);
+        const sourceType = source.droppableId.slice(lastSourceDash + 1);
         
         // Find the task being moved
         const taskToMove = tasks.find(t => t.key === draggableId);
