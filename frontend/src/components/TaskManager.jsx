@@ -167,6 +167,21 @@ const handleAreaClick = (area, event, isBottom = false) => {
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      const inputElems = [editInputRef.current, editInputBottomRef.current];
+      const clickedInsideInput = inputElems.some((el) => el && el.contains(e.target));
+      const clickedButton = e.target.closest('.add-button') || e.target.closest('.delete-button');
+      if (!clickedInsideInput && !clickedButton) {
+        finalizeEditing();
+      }
+    };
+    if (editingArea || editingObjective || editingTask) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [editingArea, editingObjective, editingTask]);
+
   const handleAddArea = async () => {
     try {
       await finalizeEditing();
