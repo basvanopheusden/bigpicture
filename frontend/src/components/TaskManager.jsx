@@ -66,12 +66,50 @@ const TaskManager = () => {
     useEffect(() => {
       localStorage.setItem('collapsedObjectives', JSON.stringify([...collapsedObjectives]));
     }, [collapsedObjectives]);
+
+    const cleanEmptyItems = async (areasData, objectivesData, tasksData) => {
+      try {
+        const deletePromises = [];
+        const filteredAreas = areasData.filter(a => {
+          if (!a.text.trim()) {
+            deletePromises.push(apiWrapper.delete(`/api/areas/${a.key}`));
+            return false;
+          }
+          return true;
+        });
+
+        const filteredObjectives = objectivesData.filter(o => {
+          if (!o.text.trim()) {
+            deletePromises.push(apiWrapper.delete(`/api/objectives/${o.key}`));
+            return false;
+          }
+          return true;
+        });
+
+        const filteredTasks = tasksData.filter(t => {
+          if (!t.text.trim()) {
+            deletePromises.push(apiWrapper.delete(`/api/tasks/${t.key}`));
+            return false;
+          }
+          return true;
+        });
+
+        if (deletePromises.length) {
+          await Promise.all(deletePromises);
+        }
+
+        return { filteredAreas, filteredObjectives, filteredTasks };
+      } catch (err) {
+        console.error('Failed to clean empty items:', err);
+        return { filteredAreas: areasData, filteredObjectives: objectivesData, filteredTasks: tasksData };
+      }
+    };
   
     const refreshAll = async () => {
       try {
         setError(null);
         console.log('Starting data refresh...');
-        
+
         const [areasData, objectivesData, tasksData] = await Promise.all([
           apiWrapper.get('/api/areas'),
           apiWrapper.get('/api/objectives'),
@@ -83,10 +121,21 @@ const TaskManager = () => {
           objectives: objectivesData,
           tasks: tasksData
         });
-        
-        setAreas(areasData.sort((a, b) => a.order_index - b.order_index));
-        setObjectives(objectivesData.sort((a, b) => a.order_index - b.order_index));
-        setTasks(tasksData.sort((a, b) => a.order_index - b.order_index));
+
+        let areaList = areasData;
+        let objectiveList = objectivesData;
+        let taskList = tasksData;
+
+        if (!editingArea && !editingObjective && !editingTask) {
+          const cleaned = await cleanEmptyItems(areasData, objectivesData, tasksData);
+          areaList = cleaned.filteredAreas;
+          objectiveList = cleaned.filteredObjectives;
+          taskList = cleaned.filteredTasks;
+        }
+
+        setAreas(areaList.sort((a, b) => a.order_index - b.order_index));
+        setObjectives(objectiveList.sort((a, b) => a.order_index - b.order_index));
+        setTasks(taskList.sort((a, b) => a.order_index - b.order_index));
         
         console.log('State updated with:', {
           areas: areasData.length,
@@ -189,10 +238,9 @@ const handleAreaClick = (area, event, isBottom = false) => {
         key: uuidv4(),
         text: ''
       };
+      setEditingArea({ ...newArea });
       await apiWrapper.post('/api/areas', newArea);
       await refreshAll();
-      // Trigger focus after the new area is rendered
-      setEditingArea({ ...newArea });
     } catch (error) {
       console.error('Failed to create area:', error);
     }
@@ -268,10 +316,9 @@ const handleAreaClick = (area, event, isBottom = false) => {
         area_key: areaKey,
         text: ''
       };
+      setEditingObjective({ ...newObjective });
       await apiWrapper.post('/api/objectives', newObjective);
       await refreshAll();
-      // Trigger focus after the new objective is rendered
-      setEditingObjective({ ...newObjective });
     } catch (error) {
       console.error('Failed to create objective:', error);
     }
