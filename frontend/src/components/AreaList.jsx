@@ -104,7 +104,11 @@ const AreaList = ({
                           {objectives
                             .filter(obj => obj.area_key === area.key)
                             .sort((a, b) => a.order_index - b.order_index)
-                            .map((objective, index) => (
+                            .map((objective, index) => {
+                              const objectiveTasks = tasks
+                                .filter(task => task.objective_key === objective.key)
+                                .sort((a, b) => a.order_index - b.order_index);
+                              return (
                               <Draggable
                                 key={objective.key}
                                 draggableId={objective.key}
@@ -142,7 +146,7 @@ const AreaList = ({
                                             <span className={`italic ${objective.status === 'complete' ? 'line-through' : ''}`}>
                                               {index + 1}. <ReactMarkdown className="inline" components={{ p: ({node, ...props}) => <span {...props} /> }}>
                                                 {objective.text || '_'}
-                                              </ReactMarkdown>
+                                              </ReactMarkdown>{objectiveTasks.length > 0 && '.'}
                                             </span>
                                             <div className="invisible group-hover:visible flex items-center ml-4">
                                               <CheckIcon
@@ -158,11 +162,9 @@ const AreaList = ({
                                         )}
                                       </div>
                                     </div>
-                                    {!collapsedObjectives.has(objective.key) && (
+                                      {!collapsedObjectives.has(objective.key) && (
                                       <TaskList
-                                        tasks={tasks
-                                          .filter(task => task.objective_key === objective.key)
-                                          .sort((a, b) => a.order_index - b.order_index)}
+                                        tasks={objectiveTasks}
                                         parentId={objective.key}
                                         parentType="objective"
                                         editingTask={editingTask}
@@ -181,7 +183,8 @@ const AreaList = ({
                                   </div>
                                 )}
                               </Draggable>
-                            ))}
+                              )
+                            })}
                           {provided.placeholder}
                           <div className="group flex items-center">
                             <PlusIcon
