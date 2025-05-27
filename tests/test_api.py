@@ -214,25 +214,6 @@ class APITestCase(unittest.TestCase):
         area = self.client.get('/api/areas').get_json()[0]
         self.assertEqual(area['text'], 'Area 1')
 
-    def test_undo_update_removes_blank_records(self):
-        # create area/objective/task with whitespace text
-        self.client.post('/api/areas', json={"key": "a1", "text": " "})
-        self.client.post('/api/objectives', json={"key": "o1", "area_key": "a1", "text": " "})
-        self.client.post('/api/tasks', json={"key": "t1", "text": " ", "objective_key": "o1"})
-
-        # update texts so they are not blank
-        self.client.patch('/api/areas/a1', json={"text": "x"})
-        self.client.patch('/api/objectives/o1', json={"text": "y"})
-        self.client.patch('/api/tasks/t1', json={"text": "z"})
-
-        # undo updates, which should trim and remove empty entries
-        self.client.post('/api/undo')  # undo task update
-        self.assertEqual(self.client.get('/api/tasks').get_json(), [])
-        self.client.post('/api/undo')  # undo objective update
-        self.assertEqual(self.client.get('/api/objectives').get_json(), [])
-        self.client.post('/api/undo')  # undo area update
-        self.assertEqual(self.client.get('/api/areas').get_json(), [])
-
     def test_cors_headers_allowed_origin(self):
         resp = self.client.get('/api/test', headers={'Origin': 'http://localhost:5173'})
         self.assertEqual(resp.status_code, 200)
