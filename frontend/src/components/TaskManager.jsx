@@ -175,8 +175,9 @@ const handleAreaClick = (area, event, isBottom = false) => {
         text: ''
       };
       await apiWrapper.post('/api/areas', newArea);
-      setEditingArea(newArea);
       await refreshAll();
+      // Trigger focus after the new area is rendered
+      setEditingArea({ ...newArea });
     } catch (error) {
       console.error('Failed to create area:', error);
     }
@@ -253,8 +254,9 @@ const handleAreaClick = (area, event, isBottom = false) => {
         text: ''
       };
       await apiWrapper.post('/api/objectives', newObjective);
-      setEditingObjective(newObjective);
       await refreshAll();
+      // Trigger focus after the new objective is rendered
+      setEditingObjective({ ...newObjective });
     } catch (error) {
       console.error('Failed to create objective:', error);
     }
