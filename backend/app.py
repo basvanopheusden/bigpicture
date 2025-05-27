@@ -7,11 +7,11 @@ from flask_cors import CORS
 
 try:
     from .database import get_db, init_db, log_action_for_undo, get_pacific_time
-    from .utils import parse_json
+    from .utils import parse_json, shift_tasks_after_delete
     from .routes import areas, objectives, tasks, undo
 except ImportError:  # pragma: no cover - executed only when run as script
     from database import get_db, init_db, log_action_for_undo, get_pacific_time
-    from utils import parse_json
+    from utils import parse_json, shift_tasks_after_delete
     from routes import areas, objectives, tasks, undo
 
 app = Flask(__name__)
@@ -40,6 +40,7 @@ with app.app_context():
     app.log_action_for_undo = log_action_for_undo
     app.get_pacific_time = get_pacific_time
     app.parse_json = parse_json
+    app.shift_tasks_after_delete = shift_tasks_after_delete
 
 @app.route('/api/test', methods=['GET'])
 def test():
