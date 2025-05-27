@@ -78,7 +78,7 @@ API is available on [http://localhost:8080](http://localhost:8080).
 ## Running Tests
 Run the backend tests with `pytest -q`:
 ```bash
-pytest -q
+PYTHONPATH=. pytest -q
 ```
 
 For simple frontend checks using Node's built-in test runner:
@@ -86,6 +86,10 @@ For simple frontend checks using Node's built-in test runner:
 cd frontend
 npm test
 ```
+
+### Development tips
+When adding new modules under `backend/`, import paths assume the project root
+is on `PYTHONPATH`. Running tests as shown above ensures this is the case.
 
 ## Repository Layout
 - `backend/` &ndash; Flask application and Dockerfile

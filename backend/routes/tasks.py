@@ -77,10 +77,8 @@ def handle_task(key):
                 task_dict = dict(task)
                 parent_key = task_dict['area_key'] if task_dict['area_key'] else task_dict['objective_key']
                 parent_type = 'area_key' if task_dict['area_key'] else 'objective_key'
-                conn.execute(
-                    f'UPDATE tasks SET order_index = order_index - 1 WHERE {parent_type} = ? AND order_index > ?',
-                    (parent_key, task_dict['order_index'])
-                )
+                # Shift remaining tasks to fill the gap left by the deletion
+                app_module.shift_tasks_after_delete(conn, parent_type, parent_key, task_dict['order_index'])
                 conn.execute('DELETE FROM tasks WHERE key = ?', (key,))
                 conn.commit()
                 return jsonify({'status': 'success'})
@@ -98,8 +96,8 @@ def handle_task(key):
                 current_dict = dict(current)
                 app_module.log_action_for_undo(conn, 'UPDATE', 'tasks', key, current_dict)
 
-                updates = []
-                values = []
+                updates = []  # column assignments for the UPDATE statement
+                values = []   # values corresponding to the assignments
                 if 'text' in data:
                     updates.append('text = ?')
                     values.append(data['text'])
@@ -113,6 +111,7 @@ def handle_task(key):
                         updates.append('date_time_completed = ?')
                         values.append(None)
 
+                # Determine new parent and ordering for the task
                 new_area_key = data.get('area_key')
                 new_objective_key = data.get('objective_key')
                 new_order = data.get('order_index', current_dict['order_index'])
