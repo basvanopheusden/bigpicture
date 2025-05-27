@@ -44,12 +44,14 @@ const TaskList = ({
           />
         ))}
         {provided.placeholder}
-        <div className="group flex items-center">
-          <PlusIcon
-            className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
-            onClick={() => handleAddTask(parentId, parentType)}
-          />
-        </div>
+        {parentType === 'objective' && (
+          <div className="group flex items-center">
+            <PlusIcon
+              className="invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black add-button h-3 w-3"
+              onClick={() => handleAddTask(parentId, parentType)}
+            />
+          </div>
+        )}
       </div>
     )}
   </Droppable>
