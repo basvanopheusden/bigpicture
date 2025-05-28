@@ -28,7 +28,7 @@ const ObjectiveList = ({
         <div key={`bottom-${objective.key}`} className="group">
           <div className="flex items-center italic">
             <span className={objective.status === 'complete' ? 'line-through' : ''}>
-              {index + 1}. {objective.text}{objectiveTasks.length > 0 && '.'}
+              {index + 1}. {objective.text}{objectiveTasks.length > 0 && ' •'}
             </span>
           </div>
           <TaskList

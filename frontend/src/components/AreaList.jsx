@@ -154,7 +154,7 @@ const AreaList = ({
                                             <span className={`italic ${objective.status === 'complete' ? 'line-through' : ''}`}>
                                               {index + 1}. <ReactMarkdown className="inline" components={{ p: ({node, ...props}) => <span {...props} /> }}>
                                                 {objective.text || '_'}
-                                              </ReactMarkdown>{objectiveTasks.length > 0 && '.'}
+                                              </ReactMarkdown>{objectiveTasks.length > 0 && ' •'}
                                             </span>
                                             <div className="invisible group-hover:visible flex items-center ml-4">
                                               <CheckIcon
