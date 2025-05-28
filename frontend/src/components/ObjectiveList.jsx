@@ -45,7 +45,7 @@ const ObjectiveList = ({
             handleTaskBlur={handleTaskBlur}
             handleTaskKeyPress={handleTaskKeyPress}
             handleAddTask={handleAddTask}
-            className="pl-4 space-y-1 mt-1 mb-4"
+            className="pl-5 space-y-1 mt-1 mb-4"
           />
         </div>
       )})}
