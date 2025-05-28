@@ -131,7 +131,7 @@ const AreaList = ({
                                     >
                                       <button
                                         onClick={(e) => { e.stopPropagation(); toggleObjectiveCollapse(objective.key); }}
-                                        className="mr-2 invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black"
+                                        className={`mr-2 invisible group-hover:visible cursor-pointer hover:text-black ${collapsedObjectives.has(objective.key) ? 'text-gray-400' : 'text-black'}`}
                                       >
                                         {collapsedObjectives.has(objective.key) ? (
                                           <ChevronRightIcon className="h-3 w-3" />
@@ -185,7 +185,7 @@ const AreaList = ({
                                         handleTaskBlur={handleTaskBlur}
                                         handleTaskKeyPress={handleTaskKeyPress}
                                         handleAddTask={handleAddTask}
-                                        className="pl-4 space-y-1 mt-1 mb-4"
+                                        className="pl-5 space-y-1 mt-1 mb-4"
                                       />
                                     )}
                                   </div>
@@ -219,7 +219,7 @@ const AreaList = ({
                         handleTaskBlur={handleTaskBlur}
                         handleTaskKeyPress={handleTaskKeyPress}
                         handleAddTask={handleAddTask}
-                        className="space-y-1 mt-4"
+                        className="pl-1 space-y-1 mt-4"
                       />
                     </>
                   )}

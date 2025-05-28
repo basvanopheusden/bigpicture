@@ -22,7 +22,7 @@ const TaskItem = ({
         ref={provided.innerRef}
         {...provided.draggableProps}
         {...provided.dragHandleProps}
-        className={`group flex items-center mb-2 ${snapshot.isDragging ? 'opacity-50' : ''}`}
+        className={`group flex items-center mb-2 ml-1 ${snapshot.isDragging ? 'opacity-50' : ''}`}
         onClick={(e) => onEdit(task, e)}
       >
         <div className="flex-grow flex items-center">
