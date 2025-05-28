@@ -304,5 +304,47 @@ class APITestCase(unittest.TestCase):
         all_tasks = sorted(c.get('/api/tasks').get_json(), key=lambda x: (x['objective_key'], x['order_index']))
         self.assertEqual([t['key'] for t in all_tasks], ['t1', 't2'])
 
+    def test_dragging_task_preserves_order(self):
+        c = self.client
+        # setup two objectives with multiple tasks
+        c.post('/api/areas', json={"key": "a1", "text": "Area"})
+        c.post('/api/objectives', json={"key": "o1", "area_key": "a1", "text": "Obj1"})
+        c.post('/api/objectives', json={"key": "o2", "area_key": "a1", "text": "Obj2"})
+        c.post('/api/tasks', json={"key": "t1", "text": "T1", "objective_key": "o1"})
+        c.post('/api/tasks', json={"key": "t2", "text": "T2", "objective_key": "o1"})
+        c.post('/api/tasks', json={"key": "t3", "text": "T3", "objective_key": "o1"})
+        c.post('/api/tasks', json={"key": "s1", "text": "S1", "objective_key": "o2"})
+        c.post('/api/tasks', json={"key": "s2", "text": "S2", "objective_key": "o2"})
+
+        def keys_for(obj_key):
+            tasks = sorted([t for t in c.get('/api/tasks').get_json() if t['objective_key'] == obj_key], key=lambda x: x['order_index'])
+            return [t['key'] for t in tasks]
+
+        def orders_for(obj_key):
+            tasks = sorted([t for t in c.get('/api/tasks').get_json() if t['objective_key'] == obj_key], key=lambda x: x['order_index'])
+            return [t['order_index'] for t in tasks]
+
+        self.assertEqual(keys_for('o1'), ['t1', 't2', 't3'])
+        self.assertEqual(keys_for('o2'), ['s1', 's2'])
+
+        # move t3 to the front of o1
+        baseline_o1 = [k for k in keys_for('o1') if k != 't3']
+        c.patch('/api/tasks/t3', json={"order_index": 0})
+        self.assertEqual(keys_for('o1'), ['t3', 't1', 't2'])
+        self.assertEqual([k for k in keys_for('o1') if k != 't3'], baseline_o1)
+        self.assertEqual(keys_for('o2'), ['s1', 's2'])
+
+        # move t1 from o1 to o2 between s1 and s2
+        baseline_o1 = [k for k in keys_for('o1') if k != 't1']
+        baseline_o2 = [k for k in keys_for('o2')]
+        c.patch('/api/tasks/t1', json={"objective_key": "o2", "order_index": 1})
+        self.assertEqual(keys_for('o1'), ['t3', 't2'])
+        self.assertEqual([k for k in keys_for('o1')], baseline_o1)
+        self.assertEqual(keys_for('o2'), ['s1', 't1', 's2'])
+        self.assertEqual([k for k in keys_for('o2') if k != 't1'], baseline_o2)
+
+        self.assertEqual(orders_for('o1'), [0, 1])
+        self.assertEqual(orders_for('o2'), [0, 1, 2])
+
 if __name__ == '__main__':
     unittest.main()
