@@ -17,20 +17,22 @@ const ObjectiveList = ({
   handleAddTask
 }) => (
   <div className="pl-4 space-y-1">
-    {objectives
+  {objectives
       .filter(obj => obj.area_key === area.key)
       .sort((a, b) => a.order_index - b.order_index)
-      .map((objective, index) => (
+      .map((objective, index) => {
+        const objectiveTasks = tasks
+          .filter(task => task.objective_key === objective.key)
+          .sort((a, b) => a.order_index - b.order_index);
+        return (
         <div key={`bottom-${objective.key}`} className="group">
           <div className="flex items-center italic">
             <span className={objective.status === 'complete' ? 'line-through' : ''}>
-              {index + 1}. {objective.text}
+              {index + 1}. {objective.text}{objectiveTasks.length > 0 && ' •'}
             </span>
           </div>
           <TaskList
-            tasks={tasks
-              .filter(task => task.objective_key === objective.key)
-              .sort((a, b) => a.order_index - b.order_index)}
+            tasks={objectiveTasks}
             parentId={objective.key}
             parentType="objective"
             editingTask={editingTask}
@@ -46,7 +48,7 @@ const ObjectiveList = ({
             className="pl-4 space-y-1 mt-1 mb-4"
           />
         </div>
-      ))}
+      )})}
   </div>
 );
 
