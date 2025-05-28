@@ -87,6 +87,9 @@ const TaskManager = () => {
         setAreas(areasData.sort((a, b) => a.order_index - b.order_index));
         setObjectives(objectivesData.sort((a, b) => a.order_index - b.order_index));
         setTasks(tasksData.sort((a, b) => a.order_index - b.order_index));
+        if (!localStorage.getItem('collapsedObjectives')) {
+          setCollapsedObjectives(new Set(objectivesData.map(o => o.key)));
+        }
         
         console.log('State updated with:', {
           areas: areasData.length,
@@ -269,6 +272,7 @@ const handleAreaClick = (area, event, isBottom = false) => {
         text: ''
       };
       await apiWrapper.post('/api/objectives', newObjective);
+      setCollapsedObjectives(prev => new Set(prev).add(newObjective.key));
       await refreshAll();
       // Trigger focus after the new objective is rendered
       setEditingObjective({ ...newObjective });
