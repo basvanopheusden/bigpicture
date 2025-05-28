@@ -62,9 +62,13 @@ const AreaList = ({
                   >
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleAreaCollapse(area.key); }}
-                      className="mr-2 invisible group-hover:visible"
+                      className="mr-2 invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black"
                     >
-                      {collapsedAreas.has(area.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
+                      {collapsedAreas.has(area.key) ? (
+                        <ChevronRightIcon className="h-3 w-3" />
+                      ) : (
+                        <ChevronDownIcon className="h-3 w-3" />
+                      )}
                     </button>
                     <div className="flex-grow flex items-center">
                       {editingArea?.key === area.key ? (
@@ -127,9 +131,13 @@ const AreaList = ({
                                     >
                                       <button
                                         onClick={(e) => { e.stopPropagation(); toggleObjectiveCollapse(objective.key); }}
-                                        className="mr-2 invisible group-hover:visible"
+                                        className="mr-2 invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black"
                                       >
-                                        {collapsedObjectives.has(objective.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
+                                        {collapsedObjectives.has(objective.key) ? (
+                                          <ChevronRightIcon className="h-3 w-3" />
+                                        ) : (
+                                          <ChevronDownIcon className="h-3 w-3" />
+                                        )}
                                       </button>
                                       <div className="flex-grow flex items-center">
                                         {editingObjective?.key === objective.key ? (
