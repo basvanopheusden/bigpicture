@@ -62,7 +62,7 @@ const AreaList = ({
                   >
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleAreaCollapse(area.key); }}
-                      className="mr-2 invisible group-hover:visible cursor-pointer text-gray-400 hover:text-black"
+                      className={`mr-2 invisible group-hover:visible cursor-pointer hover:text-black ${collapsedAreas.has(area.key) ? 'text-gray-400' : 'text-black'}`}
                     >
                       {collapsedAreas.has(area.key) ? (
                         <ChevronRightIcon className="h-3 w-3" />
