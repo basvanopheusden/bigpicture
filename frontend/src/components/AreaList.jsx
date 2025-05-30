@@ -62,7 +62,7 @@ const AreaList = ({
                   >
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleAreaCollapse(area.key); }}
-                      className={`mr-2 invisible group-hover:visible cursor-pointer hover:text-black ${collapsedAreas.has(area.key) ? 'text-gray-400' : 'text-black'}`}
+                      className={`mr-2 cursor-pointer hover:text-black ${collapsedAreas.has(area.key) ? 'text-gray-400' : 'text-black'}`}
                     >
                       {collapsedAreas.has(area.key) ? (
                         <ChevronRightIcon className="h-3 w-3" />
@@ -131,7 +131,7 @@ const AreaList = ({
                                     >
                                       <button
                                         onClick={(e) => { e.stopPropagation(); toggleObjectiveCollapse(objective.key); }}
-                                        className={`mr-2 invisible group-hover:visible cursor-pointer hover:text-black ${collapsedObjectives.has(objective.key) ? 'text-gray-400' : 'text-black'}`}
+                                        className={`mr-2 cursor-pointer hover:text-black ${collapsedObjectives.has(objective.key) ? 'text-gray-400' : 'text-black'}`}
                                       >
                                         {collapsedObjectives.has(objective.key) ? (
                                           <ChevronRightIcon className="h-3 w-3" />
